@@ -113,7 +113,7 @@ public class NN
     }
 
     public void Save(string path) {
-        using(var bw = new BinaryWriter(new FileStream(path, FileMode.OpenOrCreate))) {
+        using(var bw = new BinaryWriter(new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write))) {
             bw.Write(InputSize);
             bw.Write(HiddenSize);
             bw.Write(OutputSize);

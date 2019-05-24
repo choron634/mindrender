@@ -80,7 +80,10 @@ public class Nature : MonoBehaviour
                 BestRecord = BestReward;
             }
 
-            SaveBestBrain(BestBrain);
+            if (BestBrain != null)
+            {
+                SaveBest(BestBrain);
+            }
 
             CurrentPopCount++;
             //Debug.Log(BestReward);
@@ -162,6 +165,11 @@ public class Nature : MonoBehaviour
 
         var actions = currentNN.Predict(observations.ToArray());//学習済みのNNにセンサーからの入力を入れる
         NNAgent.AgentAction(actions);//outputをunity上のagentのactionに//5/12
+    }
+
+    private void SaveBest(NN bestbrain)
+    {
+        bestbrain.Save("savedata.txt");
     }
 
     private void SaveBestBrain(NN bestbrain)

@@ -8,7 +8,7 @@ public class Agent : MonoBehaviour
 
     public bool IsDone { get; private set; }
     public float rewardvalue;
-    public float Reward { get { return Mathf.Max(rewardvalue, 0); } private set { Reward = value; } }
+    public float Reward { get { return Mathf.Max(rewardvalue, 0); } set{ Reward = value; } }
 
 
     public void SetReward(float reward) {

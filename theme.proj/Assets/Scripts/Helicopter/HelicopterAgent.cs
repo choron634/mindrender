@@ -263,7 +263,7 @@ public class HelicopterAgent : Agent
         var deltaz = Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z)/100),1);
         var d = 1 - Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal]/Distance_to_next_waypoint,1), 3);
 
-        AddReward(Mathf.Max((w * 2 * (CurrentGoal + 1) * d - deltaz - Math.Abs(horizontalangle) - CollisionCount/20),0));
+        AddReward(Mathf.Max((w * 2 * (CurrentGoal + 1) * d - 2*deltaz - Math.Abs(horizontalangle) - CollisionCount/20),0));
 
        if (DriveTime > (CurrentGoal + 1)*9)//段階的に時間を延ばす
         {
@@ -271,6 +271,7 @@ public class HelicopterAgent : Agent
             Debug.Log("Done!");
             Controller.Stop();
             Done();
+            Reward = Reward / DriveTime;
             return;
         }
        
