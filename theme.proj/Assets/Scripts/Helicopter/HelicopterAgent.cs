@@ -129,7 +129,7 @@ public class HelicopterAgent : Agent
 
         var v = HeliRb.velocity;
 
-        Debug.Log("velocity" + v);
+        //Debug.Log("velocity" + v);
 
         //Debug.Log(Sensors[0]);
 

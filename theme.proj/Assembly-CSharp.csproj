@@ -194,6 +194,7 @@
     <Compile Include="Assets\Scripts\Class1.cs" />
     <Compile Include="Assets\Scripts\GraphicsToggle.cs" />
     <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent.cs" />
+    <Compile Include="Assets\Scripts\Helicopter\PlayBest.cs" />
     <Compile Include="Assets\Scripts\Helicopter\SimpleHelicopterController.cs" />
     <Compile Include="Assets\Scripts\Helicopter\WaypointSensor.cs" />
     <Compile Include="Assets\Scripts\Matrix.cs" />

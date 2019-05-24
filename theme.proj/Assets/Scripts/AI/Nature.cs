@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Linq;
 using System;
 using UnityEngine.UI;
+using System.IO;
 
 public class Nature : MonoBehaviour
 {
@@ -37,7 +38,6 @@ public class Nature : MonoBehaviour
     [SerializeField] private int tournamentSelection = 85;
     private int TournamentSlection { get { return tournamentSelection; } }
 
-    private HelicopterAgent HeliAgent { get; set; }
 
 
     //private List<NN> Selected { get; set; } = new List<NN>();
@@ -64,21 +64,23 @@ public class Nature : MonoBehaviour
     
     private void FixedUpdate() {//時間ごとに呼び出される
         if(NNAgent.IsDone) {//ベストの更新
-            Children[CurrentPopCount].Reward = NNAgent.Reward/HeliAgent.DriveTime;
-            if(NNAgent.Reward / HeliAgent.DriveTime > BestReward) {//一位の塗り替え
+            Children[CurrentPopCount].Reward = NNAgent.Reward;
+            if(NNAgent.Reward > BestReward) {//一位の塗り替え
                 SecondReward = BestReward;
                 SecondBrain = BestBrain;
-                BestReward = NNAgent.Reward / HeliAgent.DriveTime;
+                BestReward = NNAgent.Reward;
                 BestBrain = Children[CurrentPopCount];
             }
             else if(NNAgent.Reward > SecondReward) {//二位の塗り替え
-                SecondReward = NNAgent.Reward / HeliAgent.DriveTime;
+                SecondReward = NNAgent.Reward;
                 SecondBrain = Children[CurrentPopCount];
             }
 
             if(BestRecord < BestReward) {
                 BestRecord = BestReward;
             }
+
+            SaveBestBrain(BestBrain);
 
             CurrentPopCount++;
             //Debug.Log(BestReward);
@@ -129,7 +131,7 @@ public class Nature : MonoBehaviour
                 var TournamentMembers = Children.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(tournamentSelection).ToList();
                 var temp1 = TournamentMembers[0];
 
-                TournamentMembers.Sort((a, b) => (int)b.Reward / (int)HeliAgent.DriveTime - (int)a.Reward / (int)HeliAgent.DriveTime);
+                TournamentMembers.Sort((a, b) => (int)b.Reward - (int)a.Reward);
                 var BestBrainInTournament = TournamentMembers[0];
                 var SecondBrainInTournament = TournamentMembers[1];
 
@@ -161,4 +163,62 @@ public class Nature : MonoBehaviour
         var actions = currentNN.Predict(observations.ToArray());//学習済みのNNにセンサーからの入力を入れる
         NNAgent.AgentAction(actions);//outputをunity上のagentのactionに//5/12
     }
+
+    private void SaveBestBrain(NN bestbrain)
+    {
+        FileStream fs = new FileStream("bestbrain.txt", FileMode.Create);
+        StreamWriter sw = new StreamWriter(fs);
+
+        try
+        {
+
+            var inputbias = bestbrain.InputBias;
+            var inputweights = bestbrain.InputWeights;
+            var hiddenbias = bestbrain.HiddenBias;
+            var hidenweights = bestbrain.HiddenWeights;
+
+            var inputsize = bestbrain.InputSize;
+            var hiddensize = bestbrain.HiddenSize;
+            var outputsize = bestbrain.OutputSize;
+
+            sw.WriteLine(inputsize);
+            sw.WriteLine(hiddensize);
+            sw.WriteLine(outputsize);
+
+
+            for (int c = 0; c < inputbias.Colmun; c++)
+            {
+                var text = inputbias[0, c];
+                sw.WriteLine(text);
+            }
+            for (int r = 0; r < inputweights.Row; r++)
+            {
+                for (int c = 0; c < inputweights.Colmun; c++)
+                {
+                    var text = inputweights[r, c];
+                    sw.WriteLine(text);
+                }
+            }
+            for (int c = 0; c < hiddenbias.Colmun; c++)
+            {
+                var text = hiddenbias[0, c];
+                sw.WriteLine(text);
+            }
+            for (int r = 0; r < hidenweights.Row; r++)
+            {
+                for (int c = 0; c < hidenweights.Colmun; c++)
+                {
+                    var text = hidenweights[r, c];
+                    sw.WriteLine(text);
+                }
+            }
+        }
+        finally
+        {
+        sw.Close();
+
+        }
+
+    }
+
 }
