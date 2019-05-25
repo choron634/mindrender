@@ -14,11 +14,11 @@ public class SimpleHelicopterController : MonoBehaviour
     public float EffectiveHeight = 150f;
 
     public float turnTiltForcePercent = 1.5f;
-    public float turnForcePercent = 1.3f;
+    public float turnForcePercent = 1.8f;
 
     public float Torque { get; set; }
 
-    private float _engineForce;
+    private float _engineForce = 10;
     public float EngineForce {
         get { return _engineForce; }
         set {
@@ -73,9 +73,17 @@ public class SimpleHelicopterController : MonoBehaviour
     /// <param name="y">y軸の移動量</param>
     /// <param name="DeltaEngineForce">EngineForceの変化</param>
     /// <param name="torque">回転速度</param>
-    public void Move(float x, float y, float DeltaEngineForce, float torque) {
+    public void Move(float x, float y, float deltaengineforce, float torque) {
         Torque = torque;
-        EngineForce += Mathf.Max(DeltaEngineForce/5, 0);
+        if(deltaengineforce > 0)
+        {
+            EngineForce += deltaengineforce / 5;
+
+        }
+        else
+        {
+            EngineForce += deltaengineforce / 3;
+        }
         float tempY = 0;
         float tempX = 0;
 
@@ -165,6 +173,7 @@ public class SimpleHelicopterController : MonoBehaviour
         hMove.x = Mathf.Clamp(hMove.x, -1, 1);
         hMove.y = Mathf.Clamp(hMove.y, -1, 1);
 
+        EngineForce = Mathf.Clamp(EngineForce, 0, 100);
     }
 
     public void Action(PressedKeyCode[] obj) {

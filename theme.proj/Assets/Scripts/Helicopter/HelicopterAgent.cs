@@ -221,7 +221,7 @@ public class HelicopterAgent : Agent
         {
             if (DriveTime >= 3.0f)
             {
-                Debug.Log("too low");
+                //Debug.Log("too low");
                 AddReward(-0.1f);
             }
         }
@@ -260,18 +260,18 @@ public class HelicopterAgent : Agent
 
         float perpendiculardistance = GetPerpendicularDistance();
         var w = 1 - Mathf.Pow(Mathf.Min(perpendiculardistance/100 ,1),3);
-        var deltaz = Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z)/100),1);
+        var deltaz = 1- Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z)/100),1),3);
         var d = 1 - Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal]/Distance_to_next_waypoint,1), 3);
 
-        AddReward(Mathf.Max((w * 2 * (CurrentGoal + 1) * d - 2*deltaz - Math.Abs(horizontalangle) - CollisionCount/20),0));
+        AddReward(Mathf.Max((w * 2 * (CurrentGoal + 1) * d + 2*deltaz - Math.Abs(horizontalangle) - CollisionCount/20),0));
 
        if (DriveTime > (CurrentGoal + 1)*9)//段階的に時間を延ばす
         {
             //AddReward(Mathf.Clamp((MaxDistance - PositionSensor.GetDistance()[PointNumber - 1]), 0, MaxDistance) * 10);
-            Debug.Log("Done!");
+           // Debug.Log("Done!");
             Controller.Stop();
             Done();
-            Reward = Reward / DriveTime;
+            //Reward = Reward / DriveTime;
             return;
         }
        

@@ -73,6 +73,9 @@ public class NN
 
     public float[] Predict(float[] inputs) {
         var m = new Matrix(inputs);
+        //Debug.Log(m.Row);
+        //Debug.Log(m.Colmun);
+        //Debug.Log(InputWeights.Colmun);
         var firstLayer = m.Mul(InputWeights);
         for(int c = 0; c < firstLayer.Colmun; c++) {
             firstLayer[0, c] = Tanh(firstLayer[0, c] + InputBias[0, c]);
@@ -113,7 +116,7 @@ public class NN
     }
 
     public void Save(string path) {
-        using(var bw = new BinaryWriter(new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write))) {
+        using(var bw = new BinaryWriter(new FileStream(path, FileMode.Create, FileAccess.Write))) {
             bw.Write(InputSize);
             bw.Write(HiddenSize);
             bw.Write(OutputSize);
@@ -127,10 +130,14 @@ public class NN
     }
 
     public void Load(string path) {
-        using(var br = new BinaryReader(new FileStream(path, FileMode.OpenOrCreate))) {
+        using(var br = new BinaryReader(new FileStream(path, FileMode.Create))) {
             int inputSize = br.ReadInt32();
             int hiddenSize = br.ReadInt32();
             int outputSize = br.ReadInt32();
+            Debug.Log(inputSize);
+            Debug.Log(hiddenSize);
+            Debug.Log(outputSize);
+
             CreateMatrix(inputSize, hiddenSize, outputSize);
 
             var length = br.ReadInt32();

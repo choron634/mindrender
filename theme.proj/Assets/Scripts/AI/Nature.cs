@@ -10,10 +10,10 @@ public class Nature : MonoBehaviour
     [SerializeField] private int totalPopulation = 10;
     private int TotalPopulation { get { return totalPopulation; } }
 
-    [SerializeField] private int inputSize = 20;
+    [SerializeField] private int inputSize = 19;
     private int InputSize { get { return inputSize; } }
 
-    [SerializeField] private int hiddenSize = 15;
+    [SerializeField] private int hiddenSize = 16;
     private int HiddenSize { get { return hiddenSize; } }
 
     [SerializeField] private int outputSize = 4;
