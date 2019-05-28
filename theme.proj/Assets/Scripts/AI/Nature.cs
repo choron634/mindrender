@@ -13,8 +13,11 @@ public class Nature : MonoBehaviour
     [SerializeField] private int inputSize = 19;
     private int InputSize { get { return inputSize; } }
 
-    [SerializeField] private int hiddenSize = 16;
-    private int HiddenSize { get { return hiddenSize; } }
+    [SerializeField] private int hiddenSize1 = 16;
+    private int HiddenSize1 { get { return hiddenSize1; } }
+
+    [SerializeField] private int hiddenSize2 = 16;
+    private int HiddenSize2 { get { return hiddenSize2; } }
 
     [SerializeField] private int outputSize = 4;
     private int OutputSize { get { return outputSize; } }
@@ -49,7 +52,7 @@ public class Nature : MonoBehaviour
 
     private void Start() {//
         for(int i = 0; i < TotalPopulation; i++) {
-            Children.Add(new NN(InputSize, HiddenSize, OutputSize));
+            Children.Add(new NN(InputSize, HiddenSize1, HiddenSize2, OutputSize));
         }
     }
 
@@ -183,15 +186,19 @@ public class Nature : MonoBehaviour
 
             var inputbias = bestbrain.InputBias;
             var inputweights = bestbrain.InputWeights;
-            var hiddenbias = bestbrain.HiddenBias;
-            var hidenweights = bestbrain.HiddenWeights;
+            var hiddenbias1 = bestbrain.HiddenBias1;
+            var hiddenbias2 = bestbrain.HiddenBias2;
+            var hidenweights1 = bestbrain.HiddenWeights1;
+            var hidenweights2 = bestbrain.HiddenWeights2;
 
             var inputsize = bestbrain.InputSize;
-            var hiddensize = bestbrain.HiddenSize;
+            var hiddensize1 = bestbrain.HiddenSize1;
+            var hiddensize2 = bestbrain.HiddenSize2;
             var outputsize = bestbrain.OutputSize;
 
             sw.WriteLine(inputsize);
-            sw.WriteLine(hiddensize);
+            sw.WriteLine(hiddensize1);
+            sw.WriteLine(hiddensize2);
             sw.WriteLine(outputsize);
 
 
@@ -208,16 +215,29 @@ public class Nature : MonoBehaviour
                     sw.WriteLine(text);
                 }
             }
-            for (int c = 0; c < hiddenbias.Colmun; c++)
+            for (int c = 0; c < hiddenbias1.Colmun; c++)
             {
-                var text = hiddenbias[0, c];
+                var text = hiddenbias1[0, c];
                 sw.WriteLine(text);
             }
-            for (int r = 0; r < hidenweights.Row; r++)
+            for (int r = 0; r < hidenweights1.Row; r++)
             {
-                for (int c = 0; c < hidenweights.Colmun; c++)
+                for (int c = 0; c < hidenweights1.Colmun; c++)
                 {
-                    var text = hidenweights[r, c];
+                    var text = hidenweights1[r, c];
+                    sw.WriteLine(text);
+                }
+            }
+            for (int c = 0; c < hiddenbias2.Colmun; c++)
+            {
+                var text = hiddenbias2[0, c];
+                sw.WriteLine(text);
+            }
+            for (int r = 0; r < hidenweights2.Row; r++)
+            {
+                for (int c = 0; c < hidenweights2.Colmun; c++)
+                {
+                    var text = hidenweights2[r, c];
                     sw.WriteLine(text);
                 }
             }

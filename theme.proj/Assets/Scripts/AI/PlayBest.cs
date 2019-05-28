@@ -43,7 +43,7 @@ public class PlayBest : Agent
 
     GameObject sphere;
 
-    NN bestbrain { get; set; } = new NN(0,0,0);
+    NN bestbrain { get; set; } = new NN(0,0,0,0);
 
 
     /// <summary>
@@ -198,15 +198,18 @@ public class PlayBest : Agent
         try
         {
             var inputsize = int.Parse(sr.ReadLine());
-            var hiddensize = int.Parse(sr.ReadLine());
+            var hiddensize1 = int.Parse(sr.ReadLine());
+            var hiddensize2 = int.Parse(sr.ReadLine());
             var outputsize = int.Parse(sr.ReadLine());
 
-            bestbrain = new NN(inputsize, hiddensize, outputsize);
+            bestbrain = new NN(inputsize, hiddensize1, hiddensize2, outputsize);
 
             var inputbias = bestbrain.InputBias;
             var inputweights = bestbrain.InputWeights;
-            var hiddenbias = bestbrain.HiddenBias;
-            var hiddenweights = bestbrain.HiddenWeights;
+            var hiddenbias1 = bestbrain.HiddenBias1;
+            var hiddenbias2 = bestbrain.HiddenBias2;
+            var hiddenweights1 = bestbrain.HiddenWeights1;
+            var hiddenweights2 = bestbrain.HiddenWeights2;
 
 
             for (int c = 0; c < inputbias.Colmun; c++)
@@ -220,16 +223,29 @@ public class PlayBest : Agent
                     inputweights[r, c] = float.Parse(sr.ReadLine());
                 }
             }
-            for (int c = 0; c < hiddenbias.Colmun; c++)
+            for (int c = 0; c < hiddenbias1.Colmun; c++)
             {
-                hiddenbias[0, c] = float.Parse(sr.ReadLine());
+                hiddenbias1[0, c] = float.Parse(sr.ReadLine());
 
             }
-            for (int r = 0; r < hiddenweights.Row; r++)
+            for (int r = 0; r < hiddenweights1.Row; r++)
             {
-                for (int c = 0; c < hiddenweights.Colmun; c++)
+                for (int c = 0; c < hiddenweights1.Colmun; c++)
                 {
-                    hiddenweights[r, c] = float.Parse(sr.ReadLine());
+                    hiddenweights1[r, c] = float.Parse(sr.ReadLine());
+
+                }
+            }
+            for (int c = 0; c < hiddenbias2.Colmun; c++)
+            {
+                hiddenbias2[0, c] = float.Parse(sr.ReadLine());
+
+            }
+            for (int r = 0; r < hiddenweights2.Row; r++)
+            {
+                for (int c = 0; c < hiddenweights2.Colmun; c++)
+                {
+                    hiddenweights2[r, c] = float.Parse(sr.ReadLine());
 
                 }
             }

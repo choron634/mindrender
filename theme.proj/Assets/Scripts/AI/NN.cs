@@ -13,26 +13,32 @@ public class NN
 
     public Matrix InputBias { get; private set; }
     public Matrix InputWeights { get; private set; }
-    public Matrix HiddenBias { get; private set; }
-    public Matrix HiddenWeights { get; private set; }
+    public Matrix HiddenBias1 { get; private set; }
+    public Matrix HiddenBias2{ get; private set; }
+    public Matrix HiddenWeights1 { get; private set; }
+    public Matrix HiddenWeights2 { get; private set; }
+
 
     public int InputSize { get; private set; }
-    public int HiddenSize { get; private set; }
+    public int HiddenSize1 { get; private set; }
+    public int HiddenSize2 { get; private set; }
     public int OutputSize { get; private set; }
 
     public float Reward { get; set; }
 
-    public NN(int inputSize, int hiddenSize, int outputSize) {
-        CreateMatrix(inputSize, hiddenSize, outputSize);
+    public NN(int inputSize, int hiddenSize1, int hiddensize2, int outputSize) {
+        CreateMatrix(inputSize, hiddenSize1, hiddensize2, outputSize);
         InitAllMatrix();//行列をランダムに初期化する
     }
 
     public NN(NN other) {
-        CreateMatrix(other.InputSize, other.HiddenSize, other.OutputSize);
+        CreateMatrix(other.InputSize, other.HiddenSize1, other.HiddenSize2, other.OutputSize);
         InputBias = other.InputBias.Copy();
-        HiddenBias = other.HiddenBias.Copy();
+        HiddenBias1 = other.HiddenBias1.Copy();
+        HiddenBias2 = other.HiddenBias2.Copy();
         InputWeights = other.InputWeights.Copy();
-        HiddenWeights = other.HiddenWeights.Copy();
+        HiddenWeights1 = other.HiddenWeights1.Copy();
+        HiddenWeights2 = other.HiddenWeights2.Copy();
     }
 
     public (NN child1, NN child2) Crossover(NN other) {
@@ -81,10 +87,17 @@ public class NN
             firstLayer[0, c] = Tanh(firstLayer[0, c] + InputBias[0, c]);
         }
 
-        var lastLayer = firstLayer.Mul(HiddenWeights);
+        var secondLayer = firstLayer.Mul(HiddenWeights1);
+        for (int c = 0; c < secondLayer.Colmun; c++)
+        {
+            secondLayer[0, c] = Tanh(secondLayer[0, c] + HiddenBias1[0, c]);
+        }
+
+
+        var lastLayer = secondLayer.Mul(HiddenWeights2);
         var outputs = new float[OutputSize];
         for(int c = 0; c < OutputSize; c++) {
-            outputs[c] = Tanh(lastLayer[0, c] + HiddenBias[0, c]);
+            outputs[c] = Tanh(lastLayer[0, c] + HiddenBias2[0, c]);
         }
 
         return outputs;
@@ -101,24 +114,29 @@ public class NN
 
     private void SetDNA(float[] dna, bool mutation = true) {//DNAの形にしたものをもとの意味を持つ行列群に戻す。
         var index = SetDNA(InputBias, dna, 0, mutation);
-        index = SetDNA(HiddenBias, dna, index, mutation);
+        index = SetDNA(HiddenBias1, dna, index, mutation);
+        index = SetDNA(HiddenBias2, dna, index, mutation);
         index = SetDNA(InputWeights, dna, index, mutation);
-        index = SetDNA(HiddenWeights, dna, index, mutation);
+        index = SetDNA(HiddenWeights1, dna, index, mutation);
+        index = SetDNA(HiddenWeights2, dna, index, mutation);
     }
 
     public float[] ToDNA() {//dna:[inputbias[], hiddenbias[], inputweights[], hiddenweights[]]
         var dna = new List<float>();
         dna.AddRange(InputBias.ToArray());
-        dna.AddRange(HiddenBias.ToArray());
+        dna.AddRange(HiddenBias1.ToArray());
+        dna.AddRange(HiddenBias2.ToArray());
         dna.AddRange(InputWeights.ToArray());
-        dna.AddRange(HiddenWeights.ToArray());
+        dna.AddRange(HiddenWeights1.ToArray());
+        dna.AddRange(HiddenWeights2.ToArray());
         return dna.ToArray();
     }
 
     public void Save(string path) {
         using(var bw = new BinaryWriter(new FileStream(path, FileMode.Create, FileAccess.Write))) {
             bw.Write(InputSize);
-            bw.Write(HiddenSize);
+            bw.Write(HiddenSize1);
+            bw.Write(HiddenSize2);
             bw.Write(OutputSize);
 
             var dna = ToDNA();
@@ -132,13 +150,15 @@ public class NN
     public void Load(string path) {
         using(var br = new BinaryReader(new FileStream(path, FileMode.Create))) {
             int inputSize = br.ReadInt32();
-            int hiddenSize = br.ReadInt32();
+            int hiddenSize1 = br.ReadInt32();
+            int hiddenSize2 = br.ReadInt32();
             int outputSize = br.ReadInt32();
             Debug.Log(inputSize);
-            Debug.Log(hiddenSize);
+            Debug.Log(hiddenSize1);
+            Debug.Log(hiddenSize2);
             Debug.Log(outputSize);
 
-            CreateMatrix(inputSize, hiddenSize, outputSize);
+            CreateMatrix(inputSize, hiddenSize1, hiddenSize2, outputSize);
 
             var length = br.ReadInt32();
             var dna = new float[length];
@@ -150,22 +170,27 @@ public class NN
         }
     }
 
-    private void CreateMatrix(int inputSize, int hiddenSize, int outputSize) {
+    private void CreateMatrix(int inputSize, int hiddenSize1, int hiddenSize2, int outputSize) {
         InputSize = inputSize;
-        HiddenSize = hiddenSize;
+        HiddenSize1 = hiddenSize1;
+        HiddenSize2 = hiddenSize2;
         OutputSize = outputSize;
 
-        InputBias = new Matrix(1, hiddenSize);
-        InputWeights = new Matrix(inputSize, hiddenSize);
-        HiddenBias = new Matrix(1, hiddenSize);
-        HiddenWeights = new Matrix(hiddenSize, outputSize);
+        InputBias = new Matrix(1, hiddenSize1);
+        InputWeights = new Matrix(inputSize, hiddenSize1);
+        HiddenBias1 = new Matrix(1, HiddenSize1);
+        HiddenWeights1 = new Matrix(HiddenSize1, HiddenSize2);
+        HiddenBias2 = new Matrix(1, hiddenSize2);
+        HiddenWeights2 = new Matrix(hiddenSize2, outputSize);
     }
 
     private void InitAllMatrix() {
         InitMatrix(InputBias);
-        InitMatrix(HiddenBias);
+        InitMatrix(HiddenBias1);
+        InitMatrix(HiddenBias2);
         InitMatrix(InputWeights);
-        InitMatrix(HiddenWeights);
+        InitMatrix(HiddenWeights1);
+        InitMatrix(HiddenWeights2);
     }
 
     private void InitMatrix(Matrix m) {//行列をランダムに初期化
