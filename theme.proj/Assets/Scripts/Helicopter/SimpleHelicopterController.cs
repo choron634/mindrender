@@ -55,8 +55,9 @@ public class SimpleHelicopterController : MonoBehaviour
     }
 
     private void LiftProcess() {
-        var upForce = 1 - Mathf.Clamp(HelicopterModel.transform.position.y / EffectiveHeight, 0, 1);
-        upForce = Mathf.Lerp(0f, EngineForce, upForce) * HelicopterModel.mass;
+        //var upForce = 1 - Mathf.Clamp(HelicopterModel.transform.position.y / EffectiveHeight, 0, 1);
+        //upForce = Mathf.Lerp(0f, EngineForce, upForce) * HelicopterModel.mass;
+        var upForce = EngineForce * HelicopterModel.mass * 4 / 5;
         HelicopterModel.AddRelativeForce(Vector3.up * upForce);
     }
 

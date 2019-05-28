@@ -80,10 +80,10 @@ public class Nature : MonoBehaviour
                 BestRecord = BestReward;
             }
 
-            if (BestBrain != null)
+            /*if (BestBrain != null)
             {
                 SaveBest(BestBrain);
-            }
+            }*/
 
             CurrentPopCount++;
             //Debug.Log(BestReward);
@@ -147,6 +147,7 @@ public class Nature : MonoBehaviour
                 //Debug.Log(BestBrain);
                 
                 Children.Add(BestBrain);//エリート保存
+                Children.Add(SecondBrain);
 
                 while(Children.Count < TotalPopulation) {
                     var (c1, c2) = BestBrainInTournament.Crossover(SecondBrainInTournament);//トーナメント上位2個体の交叉結果の子供
