@@ -19,19 +19,27 @@ public class Agent : MonoBehaviour
         rewardvalue += reward;
     }
 
+    public virtual List<float> CollectYawObservations()
+    {
+        return new List<float>();
+    }
+
     public virtual List<float> CollectObservations() {
         return new List<float>();
     }
 
-    public virtual void AgentAction(float[] vectorAction) {
+    public virtual void AgentAction(float[] vectorAction)
+    {
+    }
+    public virtual void AgentAction(float[] vectorAction, float[] vectorAction2) {
     }
 
-    public virtual void AgentReset() {
+    public virtual void AgentReset(bool GenerationChangeflug) {
     }
 
-    public void Reset() {
+    public void Reset(bool GenerationChange) {
         IsDone = false;
-        AgentReset();
+        AgentReset(GenerationChange);
     }
 
     public void Done() {

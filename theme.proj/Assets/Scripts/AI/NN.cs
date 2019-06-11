@@ -217,7 +217,7 @@ public class NN
         return index;
     }
 
-    private int[] Cut(int n, int length) {//1~lengthの間のランダムな整数が重複なく入った配列を返す。（順序をランダムにする？）
+    private int[] Cut(int n, int length) {
         var set = new SortedSet<int>();
 
         set.Add(0);

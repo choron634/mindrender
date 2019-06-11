@@ -83,12 +83,13 @@ public class WaypointSensor : MonoBehaviour
     public List<float> GetHorizontalAngles()
     {
         var position = new Vector2(transform.position.x, transform.position.z);
+        var moving = new Vector2(transform.forward.x, transform.forward.z);
         var list = new List<float>();
         Array.ForEach(Points, p => {
             if (p.activeSelf)
             {
                 var v = new Vector2(p.transform.position.x, p.transform.position.z);
-                var a = Vector2.right;
+                var a = moving;
                 var b = v - position;
                 list.Add(Vector2.SignedAngle(a, b) / 180.0f);
             }

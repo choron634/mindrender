@@ -7,18 +7,19 @@ public class SimpleHelicopterController : MonoBehaviour
     public HeliRotorController MainRotorController;
     public HeliRotorController SubRotorController;
 
-    public float TurnForce = 3f;
+    public float TurnForce = 5f;
     public float ForwardForce = 10f;
     public float ForwardTiltForce = 20f;
     public float TurnTiltForce = 30f;
-    public float EffectiveHeight = 150f;
+    public float TailForce = 30f;
+    public float EffectiveHeight = 180f;
 
     public float turnTiltForcePercent = 1.5f;
     public float turnForcePercent = 1.8f;
 
     public float Torque { get; set; }
 
-    private float _engineForce = 10;
+    private float _engineForce = 0;
     public float EngineForce {
         get { return _engineForce; }
         set {
@@ -30,7 +31,7 @@ public class SimpleHelicopterController : MonoBehaviour
     }
 
     private Vector2 hMove = Vector2.zero;
-    private Vector2 hTilt = Vector2.zero;
+    private Vector3 hTilt = Vector3.zero;
     private float hTurn = 0f;
     public bool IsOnGround = true;
 
@@ -51,19 +52,21 @@ public class SimpleHelicopterController : MonoBehaviour
         var turn = TurnForce * Mathf.Lerp(hMove.x, hMove.x * (turnTiltForcePercent - Mathf.Abs(hMove.y)), Mathf.Max(0f, hMove.y));
         hTurn = Mathf.Lerp(hTurn, turn, Time.fixedDeltaTime * TurnForce);
         HelicopterModel.AddRelativeTorque(0f, hTurn * HelicopterModel.mass, 0f);
-        HelicopterModel.AddRelativeForce(Vector3.forward * Mathf.Max(0f, hMove.y * ForwardForce * HelicopterModel.mass));
+        //HelicopterModel.AddRelativeForce(Vector3.forward * Mathf.Max(0f, hMove.y * ForwardForce * HelicopterModel.mass));
+        HelicopterModel.AddRelativeForce(Vector3.forward * (hMove.y * ForwardForce * HelicopterModel.mass));
     }
 
     private void LiftProcess() {
         //var upForce = 1 - Mathf.Clamp(HelicopterModel.transform.position.y / EffectiveHeight, 0, 1);
         //upForce = Mathf.Lerp(0f, EngineForce, upForce) * HelicopterModel.mass;
-        var upForce = EngineForce * HelicopterModel.mass * 4 / 5;
+        var upForce = EngineForce * HelicopterModel.mass;
         HelicopterModel.AddRelativeForce(Vector3.up * upForce);
     }
 
     private void TiltProcess() {
         hTilt.x = Mathf.Lerp(hTilt.x, hMove.x * TurnTiltForce, Time.deltaTime);
         hTilt.y = Mathf.Lerp(hTilt.y, hMove.y * ForwardTiltForce, Time.deltaTime);
+        //hTilt.z = Mathf.Lerp(hTilt.z, Tail * TailForce * (turnTiltForcePercent - Mathf.Abs(hMove.y)), Time.deltaTime);
         HelicopterModel.transform.localRotation = Quaternion.Euler(hTilt.y, HelicopterModel.transform.localEulerAngles.y, -hTilt.x);
     }
 
@@ -76,18 +79,14 @@ public class SimpleHelicopterController : MonoBehaviour
     /// <param name="torque">回転速度</param>
     public void Move(float x, float y, float deltaengineforce, float torque) {
         Torque = torque;
-        if(deltaengineforce > 0)
-        {
-            EngineForce += deltaengineforce / 5;
 
-        }
-        else
-        {
-            EngineForce += deltaengineforce / 3;
-        }
+        EngineForce += deltaengineforce / 5;
+        //Tail = tail;
+
         float tempY = 0;
         float tempX = 0;
 
+        
         if (hMove.y > 0) {
             hMove.y -= Time.fixedDeltaTime;
         }
@@ -101,7 +100,7 @@ public class SimpleHelicopterController : MonoBehaviour
         else if(hMove.x < 0) {
             hMove.x += Time.fixedDeltaTime;
         }
-
+        
         if (!IsOnGround)
         {
             tempX = x;
@@ -115,10 +114,11 @@ public class SimpleHelicopterController : MonoBehaviour
 
         if (!IsOnGround)
         {
-            var force = torque * (turnForcePercent-hMove.y)*HelicopterModel.mass;
+            var force = 2* torque * (turnForcePercent-hMove.y)*HelicopterModel.mass;
+            //Debug.Log(force);
             HelicopterModel.AddRelativeTorque(0f, force, 0);
         }
-
+        
         /*
         if (x > 0.3)
         {

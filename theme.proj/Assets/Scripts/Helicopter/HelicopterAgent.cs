@@ -30,6 +30,9 @@ public class HelicopterAgent : Agent
     private RayPerception RayPer { get; set; }
 
     private int CurrentGoal { get; set; }
+    private int ExGoal { get; set; }
+    private int GoalCounter { get; set; }
+    private int[] Points;
     private int PointNumber { get; set; }
     private float Distance_to_next_waypoint { get; set; }
     private float MaxDistance { get; set; }
@@ -58,13 +61,21 @@ public class HelicopterAgent : Agent
 
         HeliRb = this.transform.GetComponent<Rigidbody>();
 
+
         StartPosition = transform.position;
         StartRotation = transform.rotation;
         LastPosition = StartPosition;
-        CurrentGoal = 0;
+
         PointNumber = PositionSensor.Points.Length;
+
+        Points = Enumerable.Range(0, PointNumber-1).ToArray();
+        Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
+
+        CurrentGoal = Points[0];
+        GoalCounter = 0;
+
         Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
-        MaxDistance = PositionSensor.GetDistance()[PointNumber-1];
+        //MaxDistance = PositionSensor.GetDistance()[PointNumber-1];
         CollisionCount = 0;
         
         
@@ -91,7 +102,7 @@ public class HelicopterAgent : Agent
         });
     }
     */
-    public override void AgentReset() {
+    public override void AgentReset(bool GenerationChange) {
         Controller.Stop();
         PositionSensor.WaypointReset();
         transform.position = StartPosition;
@@ -101,7 +112,14 @@ public class HelicopterAgent : Agent
         KillTime = 0;
         StopTime = 0;
         SetReward(0);
-        CurrentGoal = 0;
+
+        if (GenerationChange)
+        {
+            Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
+        }
+
+        CurrentGoal = Points[0];
+        GoalCounter = 0;
         Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
         for (int i = 0; i < PointNumber; i++)
         {
@@ -116,11 +134,24 @@ public class HelicopterAgent : Agent
         var distance = PositionSensor.GetDistance();
         if (distance[CurrentGoal] < 10.0f)
         {
-            AddReward(1000);
             return true;
         }
         else
             return false;
+    }
+
+    public override List<float> CollectYawObservations()
+    {
+        var yawobservations = new List<float>();
+
+
+        //Y軸周りの角速度
+        yawobservations.Add(HeliRb.angularVelocity.y);
+
+        // ウェイポイントまでの水平角度を取得
+        yawobservations.Add(PositionSensor.GetHorizontalAngles()[CurrentGoal]);
+
+        return yawobservations;
     }
 
     public override List<float> CollectObservations()
@@ -142,7 +173,7 @@ public class HelicopterAgent : Agent
         observations.Add(v.x);
 
         observations.Add(v.y);
-
+   
         observations.Add(v.z);
 
         // ウェイポイントまでの障害物数を取得
@@ -162,14 +193,14 @@ public class HelicopterAgent : Agent
         //各軸周りの回転角
         observations.Add(HeliRb.transform.eulerAngles.x);
 
-        observations.Add(HeliRb.transform.eulerAngles.y);
+        //observations.Add(HeliRb.transform.eulerAngles.y);
 
         observations.Add(HeliRb.transform.eulerAngles.z);
         
         //各軸周りの角速度
         observations.Add(HeliRb.angularVelocity.x);
 
-        observations.Add(HeliRb.angularVelocity.y);
+        //observations.Add(HeliRb.angularVelocity.y);
 
         observations.Add(HeliRb.angularVelocity.z);
 
@@ -180,24 +211,29 @@ public class HelicopterAgent : Agent
         return observations;
     }
 
-    public override void AgentAction(float[] outputs)
+    public override void AgentAction(float[] outputs1, float[] outputs2)
     {
-        Controller.Move(Mathf.Clamp(outputs[0],-1,1), Mathf.Clamp(outputs[1], -1,1), Mathf.Clamp(outputs[2],-1,1), Mathf.Clamp(outputs[3], -1, 1));
+        Controller.Move(Mathf.Clamp(outputs1[0],-1,1), Mathf.Clamp(outputs1[1], -1,1), Mathf.Clamp(outputs1[2],-1,1), Mathf.Clamp(outputs2[0],-1,1));
 
         if (ReachWaypoint())
-        {
-            if (CurrentGoal < PointNumber - 1)
-            {
-                sphere = GameObject.Find("Sphere"+CurrentGoal);
-                sphere.GetComponent<Renderer>().material.color = Color.red;
-                CurrentGoal++;
-                Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
-            }
+        {   
+            ExGoal = CurrentGoal;
+            CurrentGoal = Points[GoalCounter + 1];
+            GoalCounter++;
+            Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
         }
 
-        float x = outputs[0];
-        float y = outputs[1];
-        float z = outputs[2];
+        if (CurrentGoal < PointNumber - 1)
+        {
+            sphere = GameObject.Find("Sphere" + CurrentGoal);
+            sphere.GetComponent<Renderer>().material.color = Color.red;
+ 
+        }
+
+        Vector3 CurrentPosition = HeliRb.transform.position;
+        float Velocity = HeliRb.velocity.magnitude;
+
+
         float waypointdistance = PositionSensor.GetDistance()[CurrentGoal];
         int waypointobject = PositionSensor.GetObjects()[CurrentGoal];
         float horizontalangle = PositionSensor.GetHorizontalAngles()[CurrentGoal];
@@ -209,32 +245,20 @@ public class HelicopterAgent : Agent
 
         if (StatusText != null)
         {
-            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTorque : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime;
+            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime;
         }
 
         DriveTime += Time.fixedDeltaTime;
 
         //Debug.Log(DriveTime);
 
-
-        if (transform.position.y <= 1.0f)//地面に接触し続けるものにペナルティ
+        
+        if (CurrentPosition.y > 160.0f)//高く上がりすぎるものにペナルティ
         {
-            if (DriveTime >= 3.0f)
-            {
-                //Debug.Log("too low");
-                AddReward(-0.1f);
-            }
+          //Debug.Log("too heigh");
+          AddReward(-0.05f);
         }
-        /*
-                if (transform.position.y > 93.0f)//高く上がりすぎるものにペナルティ
-                {
-                    if (DriveTime >= 3.0f)
-                    {
-                        Debug.Log("too heigh");
-                        AddReward(-0.1f);
-                    }
-                }
-        */
+
 
         /*     if (DriveTime >= 5.0f)//時間がたっても報酬が増えないものを消す
              {
@@ -247,25 +271,35 @@ public class HelicopterAgent : Agent
                  }
              }
              */
-        /* if ((x * x + y * y + z * z) < 1.0f)//動かないものにペナルティ
+        if (Velocity < 5.0f)//動かないものにペナルティ
          {
              StopTime += Time.fixedDeltaTime;
              if (StopTime > 4)
              {
-                 Debug.Log("Don't move");
-                 AddReward(-0.5f);
+                 //Debug.Log("Don't move");
+                 AddReward(-0.05f);
              }
          }
-        */
+        
+        if (transform.position.y <= 3.0f)//地面に接触し続けるものを消す
+        {
+            AddReward(-0.05f);
+        }
+
+        if (Controller.EngineForce < 0.1)
+        {
+            AddReward(-0.05f);
+        }
+
 
         float perpendiculardistance = GetPerpendicularDistance();
         var w = 1 - Mathf.Pow(Mathf.Min(perpendiculardistance/100 ,1),3);
         var deltaz = 1- Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z)/100),1),3);
         var d = 1 - Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal]/Distance_to_next_waypoint,1), 3);
 
-        AddReward(Mathf.Max((w * (CurrentGoal + 1) * d * deltaz - Math.Abs(horizontalangle) - CollisionCount/20),0));
+        AddReward(Mathf.Max((w*(GoalCounter+1)*d*deltaz- Math.Abs(horizontalangle) - CollisionCount/10),0));
 
-       if (DriveTime > (CurrentGoal + 1)*11)//段階的に時間を延ばす
+       if (DriveTime > 20)//段階的に時間を延ばす
         {
             //AddReward(Mathf.Clamp((MaxDistance - PositionSensor.GetDistance()[PointNumber - 1]), 0, MaxDistance) * 10);
            // Debug.Log("Done!");
@@ -286,20 +320,9 @@ public class HelicopterAgent : Agent
                 return;
             }
         }
+        */
 
-        if(transform.position.y <= 3.0f)//地面に接触し続けるものを消す
-        {
-            KillTime += Time.fixedDeltaTime;
-            if(KillTime >= 5.0f)
-            {
-                Controller.Stop();
-                AddReward(-10);
-                Done();
-                return;
-            }
-        }
-        
-
+        /*
         if ((x*x + y*y + z*z) < 1.0F)
         {
             Controller.Stop();
@@ -375,7 +398,7 @@ public class HelicopterAgent : Agent
         }
         else
         {
-            a = PositionSensor.GetPosition()[CurrentGoal - 1];
+            a = PositionSensor.GetPosition()[ExGoal];
         }
         Vector3 b = PositionSensor.GetPosition()[CurrentGoal];
         Vector3 CurrentPosition = HeliRb.transform.position;
