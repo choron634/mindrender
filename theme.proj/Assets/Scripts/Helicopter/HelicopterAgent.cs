@@ -36,6 +36,7 @@ public class HelicopterAgent : Agent
     private int PointNumber { get; set; }
     private float Distance_to_next_waypoint { get; set; }
     private float MaxDistance { get; set; }
+    private float MaxDriveTime = 60;
 
     private int CollisionCount { get; set; }
 
@@ -221,6 +222,7 @@ public class HelicopterAgent : Agent
             CurrentGoal = Points[GoalCounter + 1];
             GoalCounter++;
             Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
+            AddReward(300);
         }
 
         if (CurrentGoal < PointNumber - 1)
@@ -242,12 +244,6 @@ public class HelicopterAgent : Agent
         //AddReward((1.0f - Mathf.Abs(PositionSensor.GetHorizontalAngles()[CurrentGoal]))*3);
         //AddReward(Mathf.Clamp(((Distance_to_next_waypoint - PositionSensor.GetDistance()[CurrentGoal])/Distance_to_next_waypoint),0,1)*2);
        
-
-        if (StatusText != null)
-        {
-            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime;
-        }
-
         DriveTime += Time.fixedDeltaTime;
 
         //Debug.Log(DriveTime);
@@ -285,7 +281,12 @@ public class HelicopterAgent : Agent
         {
             AddReward(-0.05f);
         }
-
+        /*
+        if (Controller.IsOnGround)
+        {
+            AddReward(-0.05f);
+        }
+        */
         if (Controller.EngineForce < 0.1)
         {
             AddReward(-0.05f);
@@ -296,10 +297,17 @@ public class HelicopterAgent : Agent
         var w = 1 - Mathf.Pow(Mathf.Min(perpendiculardistance/100 ,1),3);
         var deltaz = 1- Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z)/100),1),3);
         var d = 1 - Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal]/Distance_to_next_waypoint,1), 3);
+        var angle = Mathf.Pow((1 - Math.Abs(horizontalangle)), 2);
 
-        AddReward(Mathf.Max((w*(GoalCounter+1)*d*deltaz- Math.Abs(horizontalangle) - CollisionCount/10),0));
+        AddReward(Mathf.Max((w*angle*deltaz*d),0));
 
-       if (DriveTime > 20)//段階的に時間を延ばす
+        if (StatusText != null)
+        {
+            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime;
+        }
+
+
+        if (DriveTime > 15)//段階的に時間を延ばす
         {
             //AddReward(Mathf.Clamp((MaxDistance - PositionSensor.GetDistance()[PointNumber - 1]), 0, MaxDistance) * 10);
            // Debug.Log("Done!");
@@ -309,7 +317,12 @@ public class HelicopterAgent : Agent
             return;
         }
        
-
+        if (DriveTime > MaxDriveTime)
+        {
+            Controller.Stop();
+            Done();
+            return;
+        }
 
         /*if (DriveTime >= 10.0f)//時間がたっても報酬が増えないものを消す
         {
@@ -368,6 +381,7 @@ public class HelicopterAgent : Agent
              else
              {*/
             CollisionCount += 1;
+            AddReward(-10);
             //}
         }
     }
@@ -392,7 +406,7 @@ public class HelicopterAgent : Agent
     private float GetPerpendicularDistance()//最短経路に下ろした垂線の長さを取得する
     {
         Vector3 a = new Vector3(0.0f, 0.0f, 0.0f);
-        if (CurrentGoal == 0)
+        if (GoalCounter == 0)
         {
             a = StartPosition;
         }

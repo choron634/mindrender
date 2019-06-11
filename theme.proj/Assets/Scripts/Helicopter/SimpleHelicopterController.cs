@@ -19,7 +19,7 @@ public class SimpleHelicopterController : MonoBehaviour
 
     public float Torque { get; set; }
 
-    private float _engineForce = 0;
+    private float _engineForce = 40;
     public float EngineForce {
         get { return _engineForce; }
         set {
@@ -80,7 +80,7 @@ public class SimpleHelicopterController : MonoBehaviour
     public void Move(float x, float y, float deltaengineforce, float torque) {
         Torque = torque;
 
-        EngineForce += deltaengineforce / 5;
+        EngineForce += 2 * deltaengineforce;
         //Tail = tail;
 
         float tempY = 0;

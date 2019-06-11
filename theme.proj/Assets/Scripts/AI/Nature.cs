@@ -160,7 +160,7 @@ public class Nature : MonoBehaviour
 
                 ///トーナメント選択
                 var TournamentMembers = Children.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(tournamentSelection).ToList();
-                var YawTournamentMembers = ChildrenYaw.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(tournamentSelection).ToList();
+                var YawTournamentMembers = ChildrenYaw.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(ChildrenYaw.Count).ToList();
 
                 var temp1 = TournamentMembers[0];
                 var temp2 = YawTournamentMembers[0];

@@ -95,7 +95,7 @@ public class PlayBest : Agent
         });
     }
     */
-    public new void AgentReset()
+    public void AgentReset()
     {
         Controller.Stop();
         PositionSensor.WaypointReset();
