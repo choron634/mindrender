@@ -18,8 +18,11 @@ public class SimpleHelicopterController : MonoBehaviour
     public float turnForcePercent = 1.8f;
 
     public float Torque { get; set; }
+    public float TorqueForce;
 
-    private float _engineForce = 40;
+    public float InitEngineForce = 9800;
+
+    private float _engineForce;
     public float EngineForce {
         get { return _engineForce; }
         set {
@@ -33,18 +36,20 @@ public class SimpleHelicopterController : MonoBehaviour
     private Vector2 hMove = Vector2.zero;
     private Vector3 hTilt = Vector3.zero;
     private float hTurn = 0f;
-    public bool IsOnGround = true;
+    public bool IsOnGround = false;
 
     // Use this for initialization
     void Start() {
+        EngineForce = InitEngineForce;
     }
 
     void Update() {
     }
 
     void FixedUpdate() {
+        RotateProcess();
         LiftProcess();
-        MoveProcess();
+        //MoveProcess();
         TiltProcess();
     }
 
@@ -59,7 +64,7 @@ public class SimpleHelicopterController : MonoBehaviour
     private void LiftProcess() {
         //var upForce = 1 - Mathf.Clamp(HelicopterModel.transform.position.y / EffectiveHeight, 0, 1);
         //upForce = Mathf.Lerp(0f, EngineForce, upForce) * HelicopterModel.mass;
-        var upForce = EngineForce * HelicopterModel.mass;
+        var upForce = EngineForce;
         HelicopterModel.AddRelativeForce(Vector3.up * upForce);
     }
 
@@ -68,6 +73,11 @@ public class SimpleHelicopterController : MonoBehaviour
         hTilt.y = Mathf.Lerp(hTilt.y, hMove.y * ForwardTiltForce, Time.deltaTime);
         //hTilt.z = Mathf.Lerp(hTilt.z, Tail * TailForce * (turnTiltForcePercent - Mathf.Abs(hMove.y)), Time.deltaTime);
         HelicopterModel.transform.localRotation = Quaternion.Euler(hTilt.y, HelicopterModel.transform.localEulerAngles.y, -hTilt.x);
+    }
+
+    private void RotateProcess()
+    {
+        HelicopterModel.AddRelativeTorque(0f, TorqueForce, 0);
     }
 
     /// <summary>
@@ -80,7 +90,7 @@ public class SimpleHelicopterController : MonoBehaviour
     public void Move(float x, float y, float deltaengineforce, float torque) {
         Torque = torque;
 
-        EngineForce += 2 * deltaengineforce;
+        EngineForce += 100*deltaengineforce;
         //Tail = tail;
 
         float tempY = 0;
@@ -94,30 +104,18 @@ public class SimpleHelicopterController : MonoBehaviour
             hMove.y += Time.fixedDeltaTime;
         }
 
-        if(hMove.x > 0) {
+        if (hMove.x > 0) {
             hMove.x -= Time.fixedDeltaTime;
         }
         else if(hMove.x < 0) {
             hMove.x += Time.fixedDeltaTime;
         }
+
+        tempX = x;
+
+        tempY = y;
         
-        if (!IsOnGround)
-        {
-            tempX = x;
-        }
-
-        if (!IsOnGround)
-        {
-            tempY = y;
-        }
-
-
-        if (!IsOnGround)
-        {
-            var force = 2* torque * (turnForcePercent-hMove.y)*HelicopterModel.mass;
-            //Debug.Log(force);
-            HelicopterModel.AddRelativeTorque(0f, force, 0);
-        }
+        TorqueForce = 2* torque * (turnForcePercent-hMove.y)*HelicopterModel.mass;
         
         /*
         if (x > 0.3)
@@ -174,7 +172,7 @@ public class SimpleHelicopterController : MonoBehaviour
         hMove.x = Mathf.Clamp(hMove.x, -1, 1);
         hMove.y = Mathf.Clamp(hMove.y, -1, 1);
 
-        EngineForce = Mathf.Clamp(EngineForce, 0, 100);
+        EngineForce = Mathf.Max(EngineForce, 0);
     }
 
     public void Action(PressedKeyCode[] obj) {

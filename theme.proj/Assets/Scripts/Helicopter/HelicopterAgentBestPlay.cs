@@ -45,6 +45,10 @@ public class HelicopterAgentBestPlay : Agent
     [SerializeField] private Text statusText = null;
     private Text StatusText { get { return statusText; } }
 
+    [SerializeField] private string MainBrainFileName;
+    [SerializeField] private string YawBrainFileName;
+
+
     GameObject sphere;
 
 
@@ -191,11 +195,11 @@ public class HelicopterAgentBestPlay : Agent
         observations.Add(PositionSensor.GetVector()[CurrentGoal].z);
 
         //各軸周りの回転角
-        observations.Add(HeliRb.transform.eulerAngles.x);
+       // observations.Add(HeliRb.transform.eulerAngles.x);
 
         //observations.Add(HeliRb.transform.eulerAngles.y);
 
-        observations.Add(HeliRb.transform.eulerAngles.z);
+        //observations.Add(HeliRb.transform.eulerAngles.z);
         
         //各軸周りの角速度
         observations.Add(HeliRb.angularVelocity.x);
@@ -222,8 +226,8 @@ public class HelicopterAgentBestPlay : Agent
         var bestmainbrain = new NN(0, 0, 0, 0);
         var bestyawbrain = new NN(0, 0, 0, 0);
 
-        bestmainbrain = MakeNN(bestmainbrain, "bestbrain.txt");
-        bestyawbrain = MakeNN(bestyawbrain, "bestbrain_yaw.txt");
+        bestmainbrain = MakeNN(bestmainbrain, MainBrainFileName);
+        bestyawbrain = MakeNN(bestyawbrain, YawBrainFileName);
 
         var mainactions = bestmainbrain.Predict(mainobsevation.ToArray());
         var yawactions = bestyawbrain.Predict(yawobservation.ToArray());
@@ -236,6 +240,8 @@ public class HelicopterAgentBestPlay : Agent
             CurrentGoal = Points[GoalCounter + 1];
             GoalCounter++;
             Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
+            Controller.EngineForce = Controller.InitEngineForce;
+            transform.rotation = StartRotation;
         }
 
         if (CurrentGoal < PointNumber - 1)
@@ -278,19 +284,27 @@ public class HelicopterAgentBestPlay : Agent
             AddReward(-0.05f);
         }
 
+        if (Controller.IsOnGround)
+        {
+            AddReward(-0.05f);
+        }
+
         if (Controller.EngineForce < 0.1)
         {
             AddReward(-0.05f);
         }
 
+
         float perpendiculardistance = GetPerpendicularDistance();
-        var w = 1 - Mathf.Pow(Mathf.Min(perpendiculardistance / 100, 1), 3);
-        var deltaz = 1 - Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z) / 100), 1), 3);
-        var d = 1 - Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal] / Distance_to_next_waypoint, 1), 3);
+        var w = Mathf.Pow(1 - Mathf.Min(perpendiculardistance / 100, 1), 3);
+        var deltaz = Mathf.Pow(1 - Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z) / 100), 1), 3);
+        var d = 3 * Mathf.Pow(1 - Mathf.Min(PositionSensor.GetDistance()[CurrentGoal] / Distance_to_next_waypoint, 1), 3);
+        var angle = Mathf.Pow((1 - Math.Abs(horizontalangle)), 2);
 
-        AddReward(Mathf.Max((w * (GoalCounter + 1) * d * deltaz - Math.Abs(horizontalangle) - CollisionCount / 10), 0));
+        AddReward(Mathf.Max((deltaz * d * angle), 0));
 
-        if (DriveTime > 20)
+
+        if (DriveTime > 60)
         {
             Controller.Stop();
             Done();
@@ -386,6 +400,8 @@ public class HelicopterAgentBestPlay : Agent
              else
              {*/
             CollisionCount += 1;
+            AddReward(-10);
+
             //}
         }
     }

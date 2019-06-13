@@ -30,6 +30,9 @@ public class Nature : MonoBehaviour
     public NN BestBrain { get; set; }
     private NN SecondBrain { get; set; }
 
+    public NN BestOfBest { get; set; }
+    public NN BestOfBestYaw { get; set; }
+
     public NN BestBrainYaw { get; set; }
     public NN SecondBrainYaw { get; set; }
 
@@ -105,12 +108,21 @@ public class Nature : MonoBehaviour
 
             if(BestRecord < BestReward) {
                 BestRecord = BestReward;
+                BestOfBest = BestBrain;
+                BestOfBestYaw = BestBrainYaw;
             }
 
-            if (BestBrain != null)
+            if (BestOfBest != null)
             {
-                SaveBestBrain(BestBrain,"bestbrain.txt");
+                SaveBestBrain(BestOfBest,"bestbrain.txt");
                 SaveBestBrain(BestBrainYaw, "bestbrain_yaw.txt");
+            }
+
+            if(BestBrain != null)
+            {
+                SaveBestBrain(BestBrain, "currentbestbrain.txt");
+                SaveBestBrain(BestBrain, "currentbestbrain_yaw.txt");
+
             }
 
             CurrentPopCount++;
@@ -179,7 +191,7 @@ public class Nature : MonoBehaviour
                 BestReward = 0;
                 SecondReward = 0;
                 Children.Clear();
-                ChildrenYaw.Clear();
+                //ChildrenYaw.Clear();
 
                 //Debug.Log(BestBrain);
                 
@@ -194,6 +206,7 @@ public class Nature : MonoBehaviour
                     Children.Add(c1);
                     Children.Add(c2);
                 }
+                /*
                 while (ChildrenYaw.Count < TotalPopulation)
                 {
                     var (c1, c2) = BestBrainInYawTournament.Crossover(SecondBrainInYawTournament);//トーナメント上位2個体の交叉結果の子供
@@ -203,6 +216,7 @@ public class Nature : MonoBehaviour
                     ChildrenYaw.Add(c1);
                     ChildrenYaw.Add(c2);
                 }
+                */
                 BestBrain = SecondBrain = BestBrainYaw = SecondBrainYaw = null;
                 GenerationChange = true;
                 

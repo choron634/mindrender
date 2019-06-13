@@ -24,6 +24,10 @@ public class HelicopterAgent : Agent
     private float PrevReward { get; set; }
     private float KillTime { get; set; }
     private float StopTime { get; set; }
+    private float RotatingTime { get; set; }
+    private float NegativeRotatingTime { get; set; }
+
+
 
 
     private Rigidbody HeliRb { get; set; }
@@ -70,7 +74,7 @@ public class HelicopterAgent : Agent
         PointNumber = PositionSensor.Points.Length;
 
         Points = Enumerable.Range(0, PointNumber-1).ToArray();
-        Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
+        //Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
 
         CurrentGoal = Points[0];
         GoalCounter = 0;
@@ -78,8 +82,13 @@ public class HelicopterAgent : Agent
         Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
         //MaxDistance = PositionSensor.GetDistance()[PointNumber-1];
         CollisionCount = 0;
-        
-        
+
+        if (CurrentGoal < PointNumber - 1)
+        {
+            sphere = GameObject.Find("Sphere" + CurrentGoal);
+            sphere.GetComponent<Renderer>().material.color = Color.red;
+
+        }
     }
 
     /// <summary>
@@ -112,12 +121,14 @@ public class HelicopterAgent : Agent
         DriveTime = 0;
         KillTime = 0;
         StopTime = 0;
+        RotatingTime = 0;
+        NegativeRotatingTime = 0;
         SetReward(0);
 
-        if (GenerationChange)
-        {
-            Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
-        }
+        //if (GenerationChange)
+        //{
+        //    Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
+        //}
 
         CurrentGoal = Points[0];
         GoalCounter = 0;
@@ -127,13 +138,47 @@ public class HelicopterAgent : Agent
             sphere = GameObject.Find("Sphere" + i);
             sphere.GetComponent<Renderer>().material.color = Color.green;
         }
+
+        if (CurrentGoal < PointNumber - 1)
+        {
+            sphere = GameObject.Find("Sphere" + CurrentGoal);
+            sphere.GetComponent<Renderer>().material.color = Color.red;
+
+        }
         CollisionCount = 0;
+    }
+
+    public void Restart()
+    {
+        PositionSensor.WaypointReset();
+        Controller.Stop();
+        transform.position = StartPosition;
+        transform.rotation = StartRotation;
+        LastPosition = StartPosition;
+        DriveTime = 0;
+        KillTime = 0;
+        StopTime = 0;
+        RotatingTime = 0;
+        NegativeRotatingTime = 0;
+        CollisionCount = 0;
+        for (int i = 0; i < PointNumber; i++)
+        {
+            sphere = GameObject.Find("Sphere" + i);
+            sphere.GetComponent<Renderer>().material.color = Color.green;
+        }
+
+        if (CurrentGoal < PointNumber - 1)
+        {
+            sphere = GameObject.Find("Sphere" + CurrentGoal);
+            sphere.GetComponent<Renderer>().material.color = Color.red;
+
+        }
     }
 
     public bool ReachWaypoint()
     {
         var distance = PositionSensor.GetDistance();
-        if (distance[CurrentGoal] < 10.0f)
+        if (distance[CurrentGoal] < 15.0f)
         {
             return true;
         }
@@ -192,11 +237,11 @@ public class HelicopterAgent : Agent
         observations.Add(PositionSensor.GetVector()[CurrentGoal].z);
 
         //各軸周りの回転角
-        observations.Add(HeliRb.transform.eulerAngles.x);
+        //observations.Add(HeliRb.transform.eulerAngles.x);
 
         //observations.Add(HeliRb.transform.eulerAngles.y);
 
-        observations.Add(HeliRb.transform.eulerAngles.z);
+        //observations.Add(HeliRb.transform.eulerAngles.z);
         
         //各軸周りの角速度
         observations.Add(HeliRb.angularVelocity.x);
@@ -216,21 +261,19 @@ public class HelicopterAgent : Agent
     {
         Controller.Move(Mathf.Clamp(outputs1[0],-1,1), Mathf.Clamp(outputs1[1], -1,1), Mathf.Clamp(outputs1[2],-1,1), Mathf.Clamp(outputs2[0],-1,1));
 
+
         if (ReachWaypoint())
         {   
+            /*
             ExGoal = CurrentGoal;
             CurrentGoal = Points[GoalCounter + 1];
             GoalCounter++;
             Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
-            AddReward(300);
+            */
+            AddReward(200);
         }
 
-        if (CurrentGoal < PointNumber - 1)
-        {
-            sphere = GameObject.Find("Sphere" + CurrentGoal);
-            sphere.GetComponent<Renderer>().material.color = Color.red;
- 
-        }
+
 
         Vector3 CurrentPosition = HeliRb.transform.position;
         float Velocity = HeliRb.velocity.magnitude;
@@ -252,7 +295,7 @@ public class HelicopterAgent : Agent
         if (CurrentPosition.y > 160.0f)//高く上がりすぎるものにペナルティ
         {
           //Debug.Log("too heigh");
-          AddReward(-0.05f);
+          AddReward(-0.5f);
         }
 
 
@@ -273,47 +316,71 @@ public class HelicopterAgent : Agent
              if (StopTime > 4)
              {
                  //Debug.Log("Don't move");
-                 AddReward(-0.05f);
+                 AddReward(-0.5f);
              }
          }
-        
+
+        if (Controller.Torque > 0.8)
+        {
+            RotatingTime += Time.fixedDeltaTime;
+            if (RotatingTime > 10)
+            {
+                AddReward(-0.5f);
+            }
+        }
+
+        if (Controller.Torque < -0.8)
+        {
+            NegativeRotatingTime += Time.fixedDeltaTime;
+            if (NegativeRotatingTime > 10)
+            {
+                AddReward(-0.5f);
+            }
+        }
+
         if (transform.position.y <= 3.0f)//地面に接触し続けるものを消す
         {
-            AddReward(-0.05f);
+            AddReward(-0.5f);
         }
-        /*
+        
         if (Controller.IsOnGround)
         {
-            AddReward(-0.05f);
+            AddReward(-0.02f);
         }
-        */
+        
         if (Controller.EngineForce < 0.1)
         {
-            AddReward(-0.05f);
+            AddReward(-0.02f);
         }
 
 
         float perpendiculardistance = GetPerpendicularDistance();
-        var w = 1 - Mathf.Pow(Mathf.Min(perpendiculardistance/100 ,1),3);
-        var deltaz = 1- Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z)/100),1),3);
-        var d = 1 - Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal]/Distance_to_next_waypoint,1), 3);
-        var angle = Mathf.Pow((1 - Math.Abs(horizontalangle)), 2);
+        var w = 1-Mathf.Pow(Mathf.Min(perpendiculardistance/100 ,1),3);
+        var deltay = 1-Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].y)/100),1),3);
+        var d = 3*(1-Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal]/Distance_to_next_waypoint,1), 3));
+        var angle =1- Mathf.Pow((Math.Abs(horizontalangle)), 2);
 
-        AddReward(Mathf.Max((w*angle*deltaz*d),0));
+        AddReward(1+Mathf.Max((d + w*deltay),0));
 
         if (StatusText != null)
         {
-            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime;
+            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nPerpendiculardistance : " + perpendiculardistance + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime;
         }
 
 
-        if (DriveTime > 15)//段階的に時間を延ばす
+        if (DriveTime > 10)//段階的に時間を延ばす
         {
             //AddReward(Mathf.Clamp((MaxDistance - PositionSensor.GetDistance()[PointNumber - 1]), 0, MaxDistance) * 10);
            // Debug.Log("Done!");
             Controller.Stop();
-            Done();
-            //Reward = Reward / DriveTime;
+            if(CurrentGoal == PointNumber - 1)
+            {
+                Reward = Reward / PointNumber;//平均で考える。
+                Done();
+                return;
+            }
+            CurrentGoal++;
+            Restart();
             return;
         }
        
@@ -381,7 +448,7 @@ public class HelicopterAgent : Agent
              else
              {*/
             CollisionCount += 1;
-            AddReward(-10);
+            AddReward(-5);
             //}
         }
     }
