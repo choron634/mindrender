@@ -37,16 +37,21 @@ public class HelicopterAgent : Agent
     private int ExGoal { get; set; }
     private int GoalCounter { get; set; }
     private int[] Points;
+    private int[] SelectedPoints;
     private int PointNumber { get; set; }
     private float Distance_to_next_waypoint { get; set; }
     private float MaxDistance { get; set; }
     private float MaxDriveTime = 60;
+    private int TrialCount = 1;
 
     private int CollisionCount { get; set; }
 
 
     [SerializeField] private Text statusText = null;
     private Text StatusText { get { return statusText; } }
+
+    [SerializeField] private int PointsPerTrial;
+
 
     GameObject sphere;
 
@@ -73,22 +78,23 @@ public class HelicopterAgent : Agent
 
         PointNumber = PositionSensor.Points.Length;
 
-        Points = Enumerable.Range(0, PointNumber-1).ToArray();
+        //Points = Enumerable.Range(0, PointNumber).ToArray();
+        SelectedPoints = Enumerable.Range(0, PointNumber).ToArray();
+
         //Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
 
-        CurrentGoal = Points[0];
+        //SelectedPoints = Points.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(PointsPerTrial).ToArray();
+
+
+        CurrentGoal = SelectedPoints[0];
         GoalCounter = 0;
 
         Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
         //MaxDistance = PositionSensor.GetDistance()[PointNumber-1];
         CollisionCount = 0;
 
-        if (CurrentGoal < PointNumber - 1)
-        {
-            sphere = GameObject.Find("Sphere" + CurrentGoal);
-            sphere.GetComponent<Renderer>().material.color = Color.red;
-
-        }
+        sphere = GameObject.Find("Sphere" + CurrentGoal);
+        sphere.GetComponent<Renderer>().material.color = Color.red;
     }
 
     /// <summary>
@@ -114,6 +120,7 @@ public class HelicopterAgent : Agent
     */
     public override void AgentReset(bool GenerationChange) {
         Controller.Stop();
+        Controller.EngineForce = Controller.InitEngineForce;
         PositionSensor.WaypointReset();
         transform.position = StartPosition;
         transform.rotation = StartRotation;
@@ -121,6 +128,7 @@ public class HelicopterAgent : Agent
         DriveTime = 0;
         KillTime = 0;
         StopTime = 0;
+        TrialCount = 1;
         RotatingTime = 0;
         NegativeRotatingTime = 0;
         SetReward(0);
@@ -129,8 +137,11 @@ public class HelicopterAgent : Agent
         //{
         //    Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
         //}
+        //SelectedPoints = Points.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(PointsPerTrial).ToArray();
+        //SelectedPoints = SelectedPoints.AsEnumerable().OrderBy(i => Guid.NewGuid()).ToArray();
 
-        CurrentGoal = Points[0];
+
+        CurrentGoal = SelectedPoints[0];
         GoalCounter = 0;
         Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
         for (int i = 0; i < PointNumber; i++)
@@ -139,12 +150,10 @@ public class HelicopterAgent : Agent
             sphere.GetComponent<Renderer>().material.color = Color.green;
         }
 
-        if (CurrentGoal < PointNumber - 1)
-        {
-            sphere = GameObject.Find("Sphere" + CurrentGoal);
-            sphere.GetComponent<Renderer>().material.color = Color.red;
 
-        }
+        sphere = GameObject.Find("Sphere" + CurrentGoal);
+        sphere.GetComponent<Renderer>().material.color = Color.red;
+
         CollisionCount = 0;
     }
 
@@ -152,6 +161,7 @@ public class HelicopterAgent : Agent
     {
         PositionSensor.WaypointReset();
         Controller.Stop();
+        Controller.EngineForce = Controller.InitEngineForce;
         transform.position = StartPosition;
         transform.rotation = StartRotation;
         LastPosition = StartPosition;
@@ -161,18 +171,27 @@ public class HelicopterAgent : Agent
         RotatingTime = 0;
         NegativeRotatingTime = 0;
         CollisionCount = 0;
+        var temp = new int[PointsPerTrial];
+        temp[0] = SelectedPoints[PointsPerTrial - 1];
+        for (int i = 0; i < PointsPerTrial - 2; i++)
+        {
+            temp[i+1] = SelectedPoints[i];
+        }
+        SelectedPoints = temp;
+        //SelectedPoints = SelectedPoints.AsEnumerable().OrderBy(i => Guid.NewGuid()).ToArray();
+        CurrentGoal = SelectedPoints[0];
+        GoalCounter = 0;
+        Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
+
         for (int i = 0; i < PointNumber; i++)
         {
             sphere = GameObject.Find("Sphere" + i);
             sphere.GetComponent<Renderer>().material.color = Color.green;
         }
 
-        if (CurrentGoal < PointNumber - 1)
-        {
-            sphere = GameObject.Find("Sphere" + CurrentGoal);
-            sphere.GetComponent<Renderer>().material.color = Color.red;
+        sphere = GameObject.Find("Sphere" + CurrentGoal);
+        sphere.GetComponent<Renderer>().material.color = Color.red;
 
-        }
     }
 
     public bool ReachWaypoint()
@@ -186,25 +205,13 @@ public class HelicopterAgent : Agent
             return false;
     }
 
-    public override List<float> CollectYawObservations()
-    {
-        var yawobservations = new List<float>();
-
-
-        //Y軸周りの角速度
-        yawobservations.Add(HeliRb.angularVelocity.y);
-
-        // ウェイポイントまでの水平角度を取得
-        yawobservations.Add(PositionSensor.GetHorizontalAngles()[CurrentGoal]);
-
-        return yawobservations;
-    }
-
     public override List<float> CollectObservations()
     {
         var observations = new List<float>();
 
         var v = HeliRb.velocity;
+        float velocityangle = PositionSensor.GetVelocityAngles()[CurrentGoal];
+
 
         //Debug.Log("velocity" + v);
 
@@ -236,19 +243,22 @@ public class HelicopterAgent : Agent
 
         observations.Add(PositionSensor.GetVector()[CurrentGoal].z);
 
+        //observations.Add(velocityangle);
+
+
         //各軸周りの回転角
-        //observations.Add(HeliRb.transform.eulerAngles.x);
+        observations.Add(HeliRb.transform.eulerAngles.x);
 
-        //observations.Add(HeliRb.transform.eulerAngles.y);
+        observations.Add(HeliRb.transform.eulerAngles.y);
 
-        //observations.Add(HeliRb.transform.eulerAngles.z);
-        
+        observations.Add(HeliRb.transform.eulerAngles.z);
+
         //各軸周りの角速度
-        observations.Add(HeliRb.angularVelocity.x);
+        //observations.Add(HeliRb.angularVelocity.x);
 
         //observations.Add(HeliRb.angularVelocity.y);
 
-        observations.Add(HeliRb.angularVelocity.z);
+        //observations.Add(HeliRb.angularVelocity.z);
 
 
         // ウェイポイントまでの水平角度を取得
@@ -257,20 +267,24 @@ public class HelicopterAgent : Agent
         return observations;
     }
 
-    public override void AgentAction(float[] outputs1, float[] outputs2)
+    public override void AgentAction(float[] outputs)
     {
-        Controller.Move(Mathf.Clamp(outputs1[0],-1,1), Mathf.Clamp(outputs1[1], -1,1), Mathf.Clamp(outputs1[2],-1,1), Mathf.Clamp(outputs2[0],-1,1));
+        PositionSensor.WaypointReset();
+        Controller.Move(Mathf.Clamp(outputs[0],-1,1), Mathf.Clamp(outputs[1], -1,1), Mathf.Clamp(outputs[2],-1,1), Mathf.Clamp(outputs[3],-1,1));
 
+        sphere = GameObject.Find("Sphere" + CurrentGoal);
+        sphere.GetComponent<Renderer>().material.color = Color.red;
 
         if (ReachWaypoint())
         {   
-            /*
-            ExGoal = CurrentGoal;
-            CurrentGoal = Points[GoalCounter + 1];
-            GoalCounter++;
-            Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
-            */
-            AddReward(200);
+            if(GoalCounter < PointsPerTrial-1)
+            {
+                ExGoal = CurrentGoal;
+                CurrentGoal = SelectedPoints[GoalCounter + 1];
+                GoalCounter++;
+                Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
+            }
+            AddReward(400);
         }
 
 
@@ -294,8 +308,11 @@ public class HelicopterAgent : Agent
         
         if (CurrentPosition.y > 160.0f)//高く上がりすぎるものにペナルティ
         {
-          //Debug.Log("too heigh");
-          AddReward(-0.5f);
+            //Debug.Log("too heigh");
+            AddReward(-100f);
+            Controller.Stop();
+            Done();
+            return;
         }
 
 
@@ -310,6 +327,7 @@ public class HelicopterAgent : Agent
                  }
              }
              */
+        /*
         if (Velocity < 5.0f)//動かないものにペナルティ
          {
              StopTime += Time.fixedDeltaTime;
@@ -319,7 +337,13 @@ public class HelicopterAgent : Agent
                  AddReward(-0.5f);
              }
          }
+         */
+        if(PositionSensor.GetDistance()[CurrentGoal] > 100)
+        {
+            AddReward(-1.0f);
+        }
 
+        /*
         if (Controller.Torque > 0.8)
         {
             RotatingTime += Time.fixedDeltaTime;
@@ -328,7 +352,8 @@ public class HelicopterAgent : Agent
                 AddReward(-0.5f);
             }
         }
-
+        */
+        /*
         if (Controller.Torque < -0.8)
         {
             NegativeRotatingTime += Time.fixedDeltaTime;
@@ -337,51 +362,52 @@ public class HelicopterAgent : Agent
                 AddReward(-0.5f);
             }
         }
-
+        */
         if (transform.position.y <= 3.0f)//地面に接触し続けるものを消す
         {
-            AddReward(-0.5f);
+            AddReward(-1.0f);
         }
         
         if (Controller.IsOnGround)
         {
             AddReward(-0.02f);
         }
-        
+        /*
         if (Controller.EngineForce < 0.1)
         {
             AddReward(-0.02f);
         }
-
-
+        */
+        float velocityangle = PositionSensor.GetVelocityAngles()[CurrentGoal];
         float perpendiculardistance = GetPerpendicularDistance();
         var w = 1-Mathf.Pow(Mathf.Min(perpendiculardistance/100 ,1),3);
         var deltay = 1-Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].y)/100),1),3);
-        var d = 3*(1-Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal]/Distance_to_next_waypoint,1), 3));
-        var angle =1- Mathf.Pow((Math.Abs(horizontalangle)), 2);
+        var d = 2*(1-Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[CurrentGoal]/Distance_to_next_waypoint,1), 3));
+        
+        var angle =1- (Math.Abs(velocityangle));
 
-        AddReward(1+Mathf.Max((d + w*deltay),0));
+        AddReward(1+d);
 
         if (StatusText != null)
         {
-            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nPerpendiculardistance : " + perpendiculardistance + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime;
+            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nVelocityAngle : " + velocityangle + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime + "\nTrialCount : " + TrialCount + "\nGoalCounter : " + GoalCounter + "\nCurrentGoal : " + CurrentGoal;
         }
 
 
-        if (DriveTime > 10)//段階的に時間を延ばす
+        if (DriveTime > 14*(GoalCounter+1))//段階的に時間を延ばす
         {
             //AddReward(Mathf.Clamp((MaxDistance - PositionSensor.GetDistance()[PointNumber - 1]), 0, MaxDistance) * 10);
            // Debug.Log("Done!");
             Controller.Stop();
-            if(CurrentGoal == PointNumber - 1)
-            {
-                Reward = Reward / PointNumber;//平均で考える。
+            //if(TrialCount == PointsPerTrial)
+            //{
+                //Reward = Reward / PointsPerTrial;//平均で考える。
                 Done();
                 return;
-            }
-            CurrentGoal++;
-            Restart();
-            return;
+            //}
+            //TrialCount++;
+            //Restart();
+            //return;
         }
        
         if (DriveTime > MaxDriveTime)

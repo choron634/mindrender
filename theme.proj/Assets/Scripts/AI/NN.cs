@@ -7,7 +7,7 @@ using System;
 
 public class NN
 {
-    private float MutationRate { get; set; } = 0.05f;
+    private float MutationRate { get; set; } = 0.10f;
     private float RandomMin { get; set; } = -1;
     private float RandomMax { get; set; } = 1;
 

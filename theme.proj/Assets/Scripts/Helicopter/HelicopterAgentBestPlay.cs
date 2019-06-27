@@ -74,7 +74,7 @@ public class HelicopterAgentBestPlay : Agent
 
         PointNumber = PositionSensor.Points.Length;
 
-        Points = Enumerable.Range(0, PointNumber-1).ToArray();
+        Points = Enumerable.Range(0, PointNumber).ToArray();
         Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
 
         CurrentGoal = Points[0];
@@ -136,7 +136,7 @@ public class HelicopterAgentBestPlay : Agent
     public bool ReachWaypoint()
     {
         var distance = PositionSensor.GetDistance();
-        if (distance[CurrentGoal] < 10.0f)
+        if (distance[CurrentGoal] < 15.0f)
         {
             return true;
         }
@@ -304,7 +304,7 @@ public class HelicopterAgentBestPlay : Agent
         AddReward(Mathf.Max((deltaz * d * angle), 0));
 
 
-        if (DriveTime > 60)
+        if (DriveTime > 50)
         {
             Controller.Stop();
             Done();

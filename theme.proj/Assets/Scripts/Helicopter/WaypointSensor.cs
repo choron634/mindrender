@@ -10,8 +10,9 @@ public class WaypointSensor : MonoBehaviour
     [SerializeField] private string layerName = "wall";
     private string LayerName { get { return layerName; } }
 
-    [SerializeField] private GameObject[] points = null;
+    [SerializeField] public GameObject[] points = null;
     public GameObject[] Points { get { return points; } }
+
 
     public List<Vector3> GetPosition()
     {
@@ -70,7 +71,7 @@ public class WaypointSensor : MonoBehaviour
         {
             if (p.activeSelf)
             {
-                list.Add(transform.position - p.transform.position);
+                list.Add(p.transform.position - transform.position);
             }
             else
             {
@@ -94,9 +95,7 @@ public class WaypointSensor : MonoBehaviour
 
                 var axis = Vector2Cross(a, b);
 
-                var angle = Vector2.Angle(a, b)
-
-                                 * (axis < 0 ? -1 : 1);
+                var angle = Vector2.Angle(a, b)* (axis < 0 ? -1 : 1);
                 list.Add(angle / 180.0f);
             }
             else
@@ -106,6 +105,34 @@ public class WaypointSensor : MonoBehaviour
         });
         return list;
     }
+
+    public List<float> GetVelocityAngles()
+    {
+        var HeliRb = this.transform.GetComponent<Rigidbody>();
+        var position = transform.position;
+        var velocity = HeliRb.velocity;
+        //var horizontalvelocity = new Vector2(velocity.x, velocity.y);
+        var list = new List<float>();
+        Array.ForEach(Points, p => {
+            if (p.activeSelf)
+            {
+                var v = p.transform.position;
+                var a = velocity;
+                var b = v - position;
+
+                var axis = Vector3.Cross(a, b);
+
+                var angle = Vector3.Angle(a, b) * (axis.y < 0 ? -1 : 1);
+                list.Add(angle / 180.0f);
+            }
+            else
+            {
+                list.Add(0);
+            }
+        });
+        return list;
+    }
+
 
     public void WaypointReset() {
         Array.ForEach(Points, p => p.SetActive(true));

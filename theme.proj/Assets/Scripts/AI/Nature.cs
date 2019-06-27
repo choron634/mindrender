@@ -10,7 +10,7 @@ using System.Text;
 
 public class Nature : MonoBehaviour
 {
-    [SerializeField] private int totalPopulation = 10;
+    [SerializeField] private int totalPopulation = 100;
     private int TotalPopulation { get { return totalPopulation; } }
 
     [SerializeField] private int inputSize = 19;
@@ -31,14 +31,11 @@ public class Nature : MonoBehaviour
     private NN SecondBrain { get; set; }
 
     public NN BestOfBest { get; set; }
-    public NN BestOfBestYaw { get; set; }
 
     public NN BestBrainYaw { get; set; }
-    public NN SecondBrainYaw { get; set; }
 
 
     private float BestRecord { get; set; }
-    private float BestRecordYaw { get; set; }
 
 
 
@@ -50,9 +47,11 @@ public class Nature : MonoBehaviour
     [SerializeField] private Agent agent = null;
     private Agent NNAgent { get { return agent; } }
 
-    private List<NN> Children { get; set; } = new List<NN>();
-    private List<NN> ChildrenYaw { get; set; } = new List<NN>();
+    [SerializeField] private string LearnedMain;
+    [SerializeField] private string SecondLearnedMain;
 
+
+    private List<NN> Children { get; set; } = new List<NN>();
 
     [SerializeField] private int tournamentSelection = 85;
     private int TournamentSlection { get { return tournamentSelection; } }
@@ -67,13 +66,25 @@ public class Nature : MonoBehaviour
     public Text Populationtext;
 
     private void Start() {//
-        for(int i = 0; i < TotalPopulation; i++) {
-            Children.Add(new NN(InputSize, HiddenSize1, HiddenSize2, OutputSize));
-        }
-        for (int i = 0; i < TotalPopulation; i++)
+        if(LearnedMain == "nodata")
         {
-            ChildrenYaw.Add(ImportNN());
+            for (int i = 0; i < TotalPopulation; i++)
+            {
+                Children.Add(new NN(InputSize, HiddenSize1, HiddenSize2, OutputSize));
+            }
         }
+        else
+        {
+            var best = ImportNN(LearnedMain);
+            var second = ImportNN(SecondLearnedMain);
+            while (Children.Count < TotalPopulation)
+            {
+                var (c1, c2) = best.Crossover(second);
+                Children.Add(c1);
+                Children.Add(c2);
+            }
+        }
+        File.Delete(@"BestRecordforPlot.txt");
     }
 
     // Update is called once per frame
@@ -90,46 +101,44 @@ public class Nature : MonoBehaviour
         //GenerationChange = false;//if you want to keep the order of waypoints during one generation, turn off this.
         if (NNAgent.IsDone) {//ベストの更新
             Children[CurrentPopCount].Reward = NNAgent.Reward;
-            ChildrenYaw[CurrentPopCount].Reward = NNAgent.Reward;
 
             if (NNAgent.Reward > BestReward) {//一位の塗り替え
                 SecondReward = BestReward;
                 SecondBrain = BestBrain;
-                SecondBrainYaw = BestBrainYaw;
                 BestReward = NNAgent.Reward;
                 BestBrain = Children[CurrentPopCount];
-                BestBrainYaw = ChildrenYaw[CurrentPopCount];
             }
             else if(NNAgent.Reward > SecondReward) {//二位の塗り替え
                 SecondReward = NNAgent.Reward;
                 SecondBrain = Children[CurrentPopCount];
-                SecondBrainYaw = ChildrenYaw[CurrentPopCount];
             }
 
             if(BestRecord < BestReward) {
                 BestRecord = BestReward;
                 BestOfBest = BestBrain;
-                BestOfBestYaw = BestBrainYaw;
             }
 
             if (BestOfBest != null)
             {
                 SaveBestBrain(BestOfBest,"bestbrain.txt");
-                SaveBestBrain(BestBrainYaw, "bestbrain_yaw.txt");
             }
+
 
             if(BestBrain != null)
             {
                 SaveBestBrain(BestBrain, "currentbestbrain.txt");
-                SaveBestBrain(BestBrain, "currentbestbrain_yaw.txt");
-
             }
+
+
+            
 
             CurrentPopCount++;
             //Debug.Log(BestReward);
 
             // 世代交代(ルーレット選択）
             if (CurrentPopCount == TotalPopulation) {
+                SaveBestRecord(Generation, BestReward);
+
                 /*var sum = 0.0f;
                 for (int i = 0; i < Rewards.Count; i++)
                 {
@@ -172,19 +181,14 @@ public class Nature : MonoBehaviour
 
                 ///トーナメント選択
                 var TournamentMembers = Children.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(tournamentSelection).ToList();
-                var YawTournamentMembers = ChildrenYaw.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(ChildrenYaw.Count).ToList();
 
                 var temp1 = TournamentMembers[0];
-                var temp2 = YawTournamentMembers[0];
 
                 TournamentMembers.Sort((a, b) => (int)b.Reward - (int)a.Reward);
-                YawTournamentMembers.Sort((a, b) => (int)b.Reward - (int)a.Reward);
 
                 var BestBrainInTournament = TournamentMembers[0];
-                var BestBrainInYawTournament = YawTournamentMembers[0];
 
                 var SecondBrainInTournament = TournamentMembers[1];
-                var SecondBrainInYawTournament = YawTournamentMembers[1];
 
                 Generation++;
                 CurrentPopCount = 0;
@@ -206,18 +210,10 @@ public class Nature : MonoBehaviour
                     Children.Add(c1);
                     Children.Add(c2);
                 }
-                /*
-                while (ChildrenYaw.Count < TotalPopulation)
-                {
-                    var (c1, c2) = BestBrainInYawTournament.Crossover(SecondBrainInYawTournament);//トーナメント上位2個体の交叉結果の子供
-                    //var (c1, c2) = BestBrainInTournament.Crossover(BestBrainInTournament);//トーナメント上位2個体の交叉結果の子供
-                    //var (c3, c4) = SecondBrainInTournament.Crossover(SecondBrainInTournament);//トーナメント上位2個体の交叉結果の子供
-
-                    ChildrenYaw.Add(c1);
-                    ChildrenYaw.Add(c2);
-                }
-                */
-                BestBrain = SecondBrain = BestBrainYaw = SecondBrainYaw = null;
+                
+                
+                
+                BestBrain = SecondBrain = null;
                 GenerationChange = true;
                 
             }
@@ -226,13 +222,10 @@ public class Nature : MonoBehaviour
         }
 
         var currentNN = Children[CurrentPopCount];
-        var currentYawNN = ChildrenYaw[CurrentPopCount];
         var observations = NNAgent.CollectObservations();
-        var obsevationsYaw = NNAgent.CollectYawObservations();
 
         var actions = currentNN.Predict(observations.ToArray());//学習済みのNNにセンサーからの入力を入れる
-        var Yawactions = currentYawNN.Predict(obsevationsYaw.ToArray());
-        NNAgent.AgentAction(actions,Yawactions);//outputをunity上のagentのactionに//5/12
+        NNAgent.AgentAction(actions);//outputをunity上のagentのactionに//5/12
     }
 
     private void SaveBest(NN bestbrain)
@@ -314,9 +307,29 @@ public class Nature : MonoBehaviour
 
     }
 
-    public NN ImportNN()
+    public void SaveBestRecord(int generation, float bestrecord)
     {
-        FileStream fs = new FileStream("learned_yaw.txt", FileMode.Open);
+        var text = string.Format("{0},{1}\n", generation, bestrecord);
+        File.AppendAllText(@"BestRecordforPlot.txt", text);
+        /*
+        FileStream fs = new FileStream("BestRecordforPlot.txt", FileMode.Create);
+        var sw = new StreamWriter(fs, Encoding.UTF8);
+        try
+        {
+            var text = string.Format("{0},{1}\n", generation, bestrecord);
+            File.AppendAllText(@"BestRecordforPlot.txt", text);
+
+        }
+        finally
+        {
+            sw.Close();
+
+        }*/
+    }
+
+    public NN ImportNN(string filename)
+    {
+        FileStream fs = new FileStream(filename, FileMode.Open);
         var sr = new StreamReader(fs, Encoding.UTF8);
 
         var LearnedNN = new NN(0, 0, 0, 0);

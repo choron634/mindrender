@@ -63,15 +63,15 @@ public class SimpleHelicopterController : MonoBehaviour
 
     private void LiftProcess() {
         //var upForce = 1 - Mathf.Clamp(HelicopterModel.transform.position.y / EffectiveHeight, 0, 1);
-        //upForce = Mathf.Lerp(0f, EngineForce, upForce) * HelicopterModel.mass;
+        //upForce = Mathf.Lerp(0f, EngineForce, upForce);
         var upForce = EngineForce;
         HelicopterModel.AddRelativeForce(Vector3.up * upForce);
     }
 
     private void TiltProcess() {
-        hTilt.x = Mathf.Lerp(hTilt.x, hMove.x * TurnTiltForce, Time.deltaTime);
-        hTilt.y = Mathf.Lerp(hTilt.y, hMove.y * ForwardTiltForce, Time.deltaTime);
-        //hTilt.z = Mathf.Lerp(hTilt.z, Tail * TailForce * (turnTiltForcePercent - Mathf.Abs(hMove.y)), Time.deltaTime);
+        hTilt.x = Mathf.Lerp(hTilt.x, hMove.x * TurnTiltForce, Time.fixedDeltaTime);
+        hTilt.y = Mathf.Lerp(hTilt.y, hMove.y * ForwardTiltForce, Time.fixedDeltaTime);
+        //hTilt.z = Mathf.Lerp(hTilt.z, Tail * TailForce * (turnTiltForcePercent - Mathf.Abs(hMove.y)), Time.fixedDeltaTime);
         HelicopterModel.transform.localRotation = Quaternion.Euler(hTilt.y, HelicopterModel.transform.localEulerAngles.y, -hTilt.x);
     }
 
@@ -114,8 +114,8 @@ public class SimpleHelicopterController : MonoBehaviour
         tempX = x;
 
         tempY = y;
-        
-        TorqueForce = 2* torque * (turnForcePercent-hMove.y)*HelicopterModel.mass;
+
+        TorqueForce = 2* torque *HelicopterModel.mass;
         
         /*
         if (x > 0.3)
