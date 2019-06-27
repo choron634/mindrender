@@ -139,7 +139,7 @@ public class HelicopterAgent_seperate2 : Agent
             return false;
     }
 
-    public override List<float> CollectYawObservations()
+    public override List<float> CollectYawObservations()//UnityのY軸回りに関する情報を取得
     {
         var yawobservations = new List<float>();
 
@@ -154,7 +154,7 @@ public class HelicopterAgent_seperate2 : Agent
         return yawobservations;
     }
 
-    public override List<float> CollectObservations()
+    public override List<float> CollectObservations()//その他に関する情報を取得
     {
         var observations = new List<float>();
 
@@ -171,7 +171,7 @@ public class HelicopterAgent_seperate2 : Agent
             observations.AddRange(sensor.Hits());
         });
 
-        //
+        //ヘリコプターの速度ベクトルを取得
         observations.Add(v.x);
 
         observations.Add(v.y);
@@ -181,18 +181,17 @@ public class HelicopterAgent_seperate2 : Agent
         // ウェイポイントまでの障害物数を取得
         //observations.Add(PositionSensor.GetObjects()[CurrentGoal]);
 
-        //回る順番を決めなきゃいけない。
-
         // ウェイポイントまでの直線距離,ベクトルを取得
         //observations.Add(PositionSensor.GetDistance()[0]);
 
+        //ウェイポイントへのベクトルを取得
         observations.Add(PositionSensor.GetVector()[0].x);
 
         observations.Add(PositionSensor.GetVector()[0].y);
 
         observations.Add(PositionSensor.GetVector()[0].z);
 
-        //get the angle between forward dintance and nextwaypoint
+        //進行方向と次のウェイポイントとの角度を取得
         observations.Add(velocityangle);
 
 
@@ -217,12 +216,12 @@ public class HelicopterAgent_seperate2 : Agent
         return observations;
     }
 
-    public override void AgentAction(float[] outputs1, float[] outputs2)
+    public override void AgentAction(float[] outputs1, float[] outputs2)//動かす
     {
         PositionSensor.WaypointReset();
         Controller.Move(Mathf.Clamp(outputs1[0],-1,1), Mathf.Clamp(outputs1[1], -1,1), Mathf.Clamp(outputs1[2],-1,1), Mathf.Clamp(outputs2[0],-1,1));
 
-        if (ReachWaypoint())
+        if (ReachWaypoint())//ウェイポイントに到達したときの処理
         {   
             ExGoal = CurrentGoal;
             CurrentGoal = CurrentGoal + UnityEngine.Random.onUnitSphere * Distance;
@@ -282,7 +281,7 @@ public class HelicopterAgent_seperate2 : Agent
              }
          }
          */
-        if(PositionSensor.GetDistance()[0] > 100)
+        if(PositionSensor.GetDistance()[0] > 100)//離れすぎるものにペナルティ
         {
             AddReward(-1.0f);
         }
@@ -331,7 +330,7 @@ public class HelicopterAgent_seperate2 : Agent
         
         var angle =1- (Math.Abs(velocityangle));
 
-        AddReward(d);
+        AddReward(d);//ウェイポイントまでの距離が近いほうが良い
 
         if (StatusText != null)
         {

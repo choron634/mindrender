@@ -71,7 +71,7 @@ public class Nature_seperateNN : MonoBehaviour
 
     public Text Populationtext;
 
-    private void Start() {//
+    private void Start() {//学習済みファイルの読み込み
         if(LearnedMain == "nodata")
         {
             for (int i = 0; i < TotalPopulation; i++)
@@ -138,13 +138,13 @@ public class Nature_seperateNN : MonoBehaviour
                 SecondBrainYaw = ChildrenYaw[CurrentPopCount];
             }
 
-            if(BestRecord < BestReward) {
+            if(BestRecord < BestReward) {//全体を通じてのベスト
                 BestRecord = BestReward;
                 BestOfBest = BestBrain;
                 BestOfBestYaw = BestBrainYaw;
             }
 
-            if (BestOfBest != null)
+            if (BestOfBest != null)//ベストのセーブ
             {
                 SaveBestBrain(BestOfBest,"bestbrain.txt");
                 SaveBestBrain(BestOfBestYaw, "bestbrain_yaw.txt");
@@ -161,7 +161,7 @@ public class Nature_seperateNN : MonoBehaviour
             CurrentPopCount++;
             //Debug.Log(BestReward);
 
-            // 世代交代(ルーレット選択）
+           
             if (CurrentPopCount == TotalPopulation) {
                 SaveBestRecord(Generation, BestReward);
 
@@ -235,9 +235,6 @@ public class Nature_seperateNN : MonoBehaviour
 
                 while(Children.Count < TotalPopulation) {
                     var (c1, c2) = BestBrainInTournament.Crossover(SecondBrainInTournament);//トーナメント上位2個体の交叉結果の子供
-                    //var (c1, c2) = BestBrainInTournament.Crossover(BestBrainInTournament);//トーナメント上位2個体の交叉結果の子供
-                    //var (c3, c4) = SecondBrainInTournament.Crossover(SecondBrainInTournament);//トーナメント上位2個体の交叉結果の子供
-
                     Children.Add(c1);
                     Children.Add(c2);
                 }
@@ -245,9 +242,6 @@ public class Nature_seperateNN : MonoBehaviour
                 while (ChildrenYaw.Count < TotalPopulation)
                 {
                     var (c1, c2) = BestBrainInYawTournament.Crossover(SecondBrainInYawTournament);//トーナメント上位2個体の交叉結果の子供
-                    //var (c1, c2) = BestBrainInTournament.Crossover(BestBrainInTournament);//トーナメント上位2個体の交叉結果の子供
-                    //var (c3, c4) = SecondBrainInTournament.Crossover(SecondBrainInTournament);//トーナメント上位2個体の交叉結果の子供
-
                     ChildrenYaw.Add(c1);
                     ChildrenYaw.Add(c2);
                 }
@@ -265,8 +259,8 @@ public class Nature_seperateNN : MonoBehaviour
         var observations = NNAgent.CollectObservations();
         var obsevationsYaw = NNAgent.CollectYawObservations();
 
-        var actions = currentNN.Predict(observations.ToArray());//学習済みのNNにセンサーからの入力を入れる
-        var Yawactions = currentYawNN.Predict(obsevationsYaw.ToArray());
+        var actions = currentNN.Predict(observations.ToArray());//学習済みのNNに入力を入れる
+        var Yawactions = currentYawNN.Predict(obsevationsYaw.ToArray());//Y軸回りの入力を入れる
         NNAgent.AgentAction(actions,Yawactions);//outputをunity上のagentのactionに//5/12
     }
 
