@@ -253,7 +253,6 @@ public class HelicopterAgent_seperate2 : Agent
         {
             //Debug.Log("too heigh");
             AddReward(-100f);
-            Controller.Stop();
             Done();
             return;
         }
@@ -353,14 +352,14 @@ public class HelicopterAgent_seperate2 : Agent
             //Restart();
             //return;
         }
-       /*
-        if (DriveTime > MaxDriveTime)
+       
+        if (DriveTime > 360)
         {
             Controller.Stop();
             Done();
             return;
         }
-        */
+        
         /*if (DriveTime >= 10.0f)//時間がたっても報酬が増えないものを消す
         {
             if (Reward < 10)

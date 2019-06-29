@@ -83,6 +83,7 @@ public class Nature_seperateNN : MonoBehaviour
         {
             var best = ImportNN(LearnedMain);
             var second = ImportNN(SecondLearnedMain);
+            Children.Add(best);
             while (Children.Count < TotalPopulation)
             {
                 var (c1, c2) = best.Crossover(second);
