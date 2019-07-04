@@ -20,7 +20,7 @@ public class SimpleHelicopterController : MonoBehaviour
     public float Torque { get; set; }
     public float TorqueForce;
 
-    public float InitEngineForce = 9800;
+    [SerializeField] public float InitEngineForce = 9800;
 
     private float _engineForce;
     public float EngineForce {
@@ -49,7 +49,7 @@ public class SimpleHelicopterController : MonoBehaviour
     void FixedUpdate() {
         RotateProcess();
         LiftProcess();
-        //MoveProcess();
+        //MoveProcess();//傾きに対するその方向の運動の線形性を損なうので廃止しました。
         TiltProcess();
     }
 
@@ -87,7 +87,7 @@ public class SimpleHelicopterController : MonoBehaviour
     /// <param name="y">y軸の移動量</param>
     /// <param name="DeltaEngineForce">EngineForceの変化</param>
     /// <param name="torque">回転速度</param>
-    public void Move(float x, float y, float deltaengineforce, float torque) {
+    public void Move(float x, float y, float deltaengineforce, float torque) {//Use this.
         Torque = torque;
 
         EngineForce += 100*deltaengineforce;
@@ -115,56 +115,9 @@ public class SimpleHelicopterController : MonoBehaviour
 
         tempY = y;
 
+        //TorqueForce = 2 * torque * (turnForcePercent - hMove.y) * HelicopterModel.mass;
+
         TorqueForce = 2* torque *HelicopterModel.mass;
-        
-        /*
-        if (x > 0.3)
-        {
-            if (!IsOnGround)
-            {
-                tempX = Time.fixedDeltaTime;
-            }
-        }
-        if (x < -0.3)
-        {
-            if (!IsOnGround)
-            {
-                tempX = -Time.fixedDeltaTime;
-            }
-        }
-
-        if (y > 0.3)
-        {
-            if (!IsOnGround)
-            {
-                tempY = Time.fixedDeltaTime;
-            }
-        }
-        if (y < -0.3)
-        {
-            if (!IsOnGround)
-            {
-                tempY = -Time.fixedDeltaTime;
-            }
-        }
-
-        if(torque >= 0.2)
-        {
-            if (!IsOnGround)
-            {
-                var force = (turnForcePercent - Mathf.Abs(hMove.y)) * HelicopterModel.mass;
-                HelicopterModel.AddRelativeTorque(0f, force, 0);
-            }
-        }
-        else if(torque <= -0.2)
-        {
-            if (!IsOnGround)
-            {
-                var force = -(turnForcePercent - Mathf.Abs(hMove.y)) * HelicopterModel.mass;
-                HelicopterModel.AddRelativeTorque(0f, force, 0);
-            }
-
-        }*/
 
         hMove.x += tempX;
         hMove.y += tempY;
@@ -175,7 +128,7 @@ public class SimpleHelicopterController : MonoBehaviour
         EngineForce = Mathf.Max(EngineForce, 0);
     }
 
-    public void Action(PressedKeyCode[] obj) {
+    public void Action(PressedKeyCode[] obj) {//Default contoroller for keyboard input.
         float tempY = 0;
         float tempX = 0;
 

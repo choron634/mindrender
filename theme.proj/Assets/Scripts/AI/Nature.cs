@@ -218,7 +218,7 @@ public class Nature : MonoBehaviour
                 
             }
 
-            NNAgent.Reset(GenerationChange);
+            NNAgent.Reset();
         }
 
         var currentNN = Children[CurrentPopCount];

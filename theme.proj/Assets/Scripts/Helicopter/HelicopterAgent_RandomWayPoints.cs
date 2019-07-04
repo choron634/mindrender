@@ -105,7 +105,7 @@ public class HelicopterAgent_RandomWayPoints : Agent
         });
     }
     */
-    public override void AgentReset(bool GenerationChange) {
+    public override void AgentReset() {
         //Seed = Seed + 1;
         UnityEngine.Random.InitState(Seed);
 

@@ -105,7 +105,7 @@ public class HelicopterAgent_seperate2 : Agent
         });
     }
     */
-    public override void AgentReset(bool GenerationChange) {
+    public override void AgentReset() {
         //Seed = Seed + 1;
         UnityEngine.Random.InitState(Seed);
 
@@ -226,8 +226,11 @@ public class HelicopterAgent_seperate2 : Agent
             ExGoal = CurrentGoal;
             CurrentGoal = CurrentGoal + UnityEngine.Random.onUnitSphere * Distance;
             PositionSensor.points[0].transform.position = CurrentGoal;
+            //var timebonus = 5*Mathf.Pow(12 * (GoalCounter + 1) - DriveTime,2);
+            //AddReward(timebonus);
             GoalCounter++;
             AddReward(500);
+
         }
 
 
@@ -337,7 +340,7 @@ public class HelicopterAgent_seperate2 : Agent
         }
 
 
-        if (DriveTime > 12*(GoalCounter+1))//段階的に時間を延ばす
+        if (DriveTime > 10*(GoalCounter+1))//段階的に時間を延ばす
         {
             //AddReward(Mathf.Clamp((MaxDistance - PositionSensor.GetDistance()[PointNumber - 1]), 0, MaxDistance) * 10);
            // Debug.Log("Done!");

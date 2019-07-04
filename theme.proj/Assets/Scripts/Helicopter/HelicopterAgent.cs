@@ -118,7 +118,7 @@ public class HelicopterAgent : Agent
         });
     }
     */
-    public override void AgentReset(bool GenerationChange) {
+    public override void AgentReset() {
         Controller.Stop();
         Controller.EngineForce = Controller.InitEngineForce;
         PositionSensor.WaypointReset();

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using UnityEngine.UI;
 
-public class HelicopterAgent_Seperate : Agent
+public class HelicopterAgent_seperate : Agent
 {
 
     private Sensor[] Sensors { get; set; }
@@ -118,7 +118,7 @@ public class HelicopterAgent_Seperate : Agent
         });
     }
     */
-    public override void AgentReset(bool GenerationChange) {
+    public override void AgentReset() {
         Controller.Stop();
         Controller.EngineForce = Controller.InitEngineForce;
         PositionSensor.WaypointReset();
@@ -262,7 +262,7 @@ public class HelicopterAgent_Seperate : Agent
 
         observations.Add(PositionSensor.GetVector()[CurrentGoal].z);
 
-        //observations.Add(velocityangle);
+        observations.Add(velocityangle);
 
 
         //各軸周りの回転角
@@ -273,11 +273,11 @@ public class HelicopterAgent_Seperate : Agent
         //observations.Add(HeliRb.transform.eulerAngles.z);
 
         //各軸周りの角速度
-        observations.Add(HeliRb.angularVelocity.x);
+        //observations.Add(HeliRb.angularVelocity.x);
 
         //observations.Add(HeliRb.angularVelocity.y);
 
-        observations.Add(HeliRb.angularVelocity.z);
+        //observations.Add(HeliRb.angularVelocity.z);
 
 
         // ウェイポイントまでの水平角度を取得

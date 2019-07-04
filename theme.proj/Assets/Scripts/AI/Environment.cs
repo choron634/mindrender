@@ -53,7 +53,7 @@ public class Environment : MonoBehaviour
     }
 
     public virtual void Reset() {
-        Agents.ForEach(a => a.Reset(false));
+        Agents.ForEach(a => a.Reset());
         CurrentStep = 0;
         EpisodeCount++;
 
@@ -84,7 +84,7 @@ public class Environment : MonoBehaviour
 
     private void AgentResetIfDone() {
         foreach(var a in Agents.Where(a => a.IsDone)) {
-            a.Reset(false);
+            a.Reset();
         }
     }
 

@@ -121,7 +121,7 @@ public class NN
         index = SetDNA(HiddenWeights2, dna, index, mutation);
     }
 
-    public float[] ToDNA() {//dna:[inputbias[], hiddenbias[], inputweights[], hiddenweights[]]
+    public float[] ToDNA() {
         var dna = new List<float>();
         dna.AddRange(InputBias.ToArray());
         dna.AddRange(HiddenBias1.ToArray());

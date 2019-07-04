@@ -108,7 +108,7 @@ public class HelicopterAgentBestPlayInOrder : Agent
         });
     }
     */
-    public override void AgentReset(bool GenerationChange) {
+    public override void AgentReset() {
         Controller.Stop();
         PositionSensor.WaypointReset();
         transform.position = StartPosition;
@@ -163,6 +163,7 @@ public class HelicopterAgentBestPlayInOrder : Agent
         var observations = new List<float>();
 
         var v = HeliRb.velocity;
+        float velocityangle = PositionSensor.GetVelocityAngles()[0];
 
         //Debug.Log("velocity" + v);
 
@@ -193,7 +194,8 @@ public class HelicopterAgentBestPlayInOrder : Agent
         observations.Add(PositionSensor.GetVector()[CurrentGoal].y);
 
         observations.Add(PositionSensor.GetVector()[CurrentGoal].z);
-
+        observations.Add(velocityangle);
+        
         //各軸周りの回転角
        // observations.Add(HeliRb.transform.eulerAngles.x);
 
@@ -202,11 +204,11 @@ public class HelicopterAgentBestPlayInOrder : Agent
         //observations.Add(HeliRb.transform.eulerAngles.z);
         
         //各軸周りの角速度
-        observations.Add(HeliRb.angularVelocity.x);
+        //observations.Add(HeliRb.angularVelocity.x);
 
         //observations.Add(HeliRb.angularVelocity.y);
 
-        observations.Add(HeliRb.angularVelocity.z);
+        //observations.Add(HeliRb.angularVelocity.z);
 
 
         // ウェイポイントまでの水平角度を取得
@@ -318,7 +320,7 @@ public class HelicopterAgentBestPlayInOrder : Agent
         {
             Controller.Stop();
             Done();
-            AgentReset(false);
+            AgentReset();
             return;
         }
     }

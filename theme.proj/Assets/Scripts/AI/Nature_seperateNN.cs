@@ -40,12 +40,13 @@ public class Nature_seperateNN : MonoBehaviour
     private float BestRecord { get; set; }
     private float BestRecordYaw { get; set; }
 
+    private int EliteNumber = 10;
+
 
 
     private int CurrentPopCount { get; set; }
     private int Generation { get; set; }
 
-    private bool GenerationChange;
 
     [SerializeField] private Agent agent = null;
     private Agent NNAgent { get { return agent; } }
@@ -61,12 +62,6 @@ public class Nature_seperateNN : MonoBehaviour
 
     [SerializeField] private int tournamentSelection = 85;
     private int TournamentSlection { get { return tournamentSelection; } }
-
-
-
-    //private List<NN> Selected { get; set; } = new List<NN>();
-
-    //private List<float> Rewards { get; set; } = new List<float>();
 
 
     public Text Populationtext;
@@ -119,8 +114,6 @@ public class Nature_seperateNN : MonoBehaviour
     }
     
     private void FixedUpdate() {//時間ごとに呼び出される
-        GenerationChange = true;//if you don't want to keep the order of waypoints during one generation, turn off this.
-        //GenerationChange = false;//if you want to keep the order of waypoints during one generation, turn off this.
         if (NNAgent.IsDone) {//ベストの更新
             Children[CurrentPopCount].Reward = NNAgent.Reward;
             ChildrenYaw[CurrentPopCount].Reward = NNAgent.Reward;
@@ -160,51 +153,10 @@ public class Nature_seperateNN : MonoBehaviour
             }
 
             CurrentPopCount++;
-            //Debug.Log(BestReward);
 
            
             if (CurrentPopCount == TotalPopulation) {
                 SaveBestRecord(Generation, BestReward);
-
-                /*var sum = 0.0f;
-                for (int i = 0; i < Rewards.Count; i++)
-                {
-                    sum += Rewards[i];
-                }
-                for (int i = 0; i < Rewards.Count; i++)
-                {
-                    Rewards[i] = Rewards[i] / sum;
-                }
-
-                Selected.Add(BestBrain);//エリート保存
-
-                for (int i = 1; i < Children.Count; i++)
-                {
-                    float sum_score = 0.0f;
-                    [.InitState(System.DateTime.Now.Millisecond);
-                    float rdm = UnityEngine.Random.Range(0.0f, 1.0f);
-
-                    for (int j = 0; j < Rewards.Count; j++)
-                    {
-                        sum_score += Rewards[j];
-                        if (sum_score > rdm)
-                        {
-                            Selected.Add(Children[j]);
-                            break;
-                        }
-                    }
-
-                }
-
-                for(int i = 0; i < Children.Count; i++)
-                {
-                    Children[i] = Selected[i];
-                }
-
-                Selected.Clear();
-                Rewards.Clear();
-                BestBrain = SecondBrain = null;
-                */
 
                 ///トーナメント選択
                 var TournamentMembers = Children.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(tournamentSelection).ToList();
@@ -227,32 +179,34 @@ public class Nature_seperateNN : MonoBehaviour
                 BestReward = 0;
                 SecondReward = 0;
                 Children.Clear();
-                //ChildrenYaw.Clear();
+                //ChildrenYaw.Clear();//if you want to update the yaw NN, remove this coment out.
 
                 //Debug.Log(BestBrain);
-                
-                //Children.Add(BestBrain);//エリート保存
-                //Children.Add(SecondBrain);
+                for (int i = 0; i < EliteNumber; i++)//エリート保存
+                {
+                    Children.Add(TournamentMembers[i]);
+                    //ChildrenYaw.Add(YawTournamentMembers[i]);//if you want to update the yaw NN, remove this coment out.
+                }
 
-                while(Children.Count < TotalPopulation) {
+                while (Children.Count < TotalPopulation) {
                     var (c1, c2) = BestBrainInTournament.Crossover(SecondBrainInTournament);//トーナメント上位2個体の交叉結果の子供
                     Children.Add(c1);
                     Children.Add(c2);
                 }
-                
-                while (ChildrenYaw.Count < TotalPopulation)
+
+                /*
+                while (ChildrenYaw.Count < TotalPopulation) //if you want to update the yaw NN, remove this coment out.
                 {
                     var (c1, c2) = BestBrainInYawTournament.Crossover(SecondBrainInYawTournament);//トーナメント上位2個体の交叉結果の子供
                     ChildrenYaw.Add(c1);
                     ChildrenYaw.Add(c2);
                 }
-                
+                */
                 BestBrain = SecondBrain = BestBrainYaw = SecondBrainYaw = null;
-                GenerationChange = true;
                 
             }
 
-            NNAgent.Reset(GenerationChange);
+            NNAgent.Reset();
         }
 
         var currentNN = Children[CurrentPopCount];
@@ -262,12 +216,7 @@ public class Nature_seperateNN : MonoBehaviour
 
         var actions = currentNN.Predict(observations.ToArray());//学習済みのNNに入力を入れる
         var Yawactions = currentYawNN.Predict(obsevationsYaw.ToArray());//Y軸回りの入力を入れる
-        NNAgent.AgentAction(actions,Yawactions);//outputをunity上のagentのactionに//5/12
-    }
-
-    private void SaveBest(NN bestbrain)
-    {
-        bestbrain.Save("savedata.txt");
+        NNAgent.AgentAction(actions,Yawactions);//outputをunity上のagentのactionに
     }
 
     private void SaveBestBrain(NN bestbrain, string filename)
@@ -344,24 +293,10 @@ public class Nature_seperateNN : MonoBehaviour
 
     }
 
-    public void SaveBestRecord(int generation, float bestrecord)
+    public void SaveBestRecord(int generation, float bestrecord) //create a text file for plot.
     {
         var text = string.Format("{0},{1}\n", generation, bestrecord);
         File.AppendAllText(@"BestRecordforPlot.txt", text);
-        /*
-        FileStream fs = new FileStream("BestRecordforPlot.txt", FileMode.Create);
-        var sw = new StreamWriter(fs, Encoding.UTF8);
-        try
-        {
-            var text = string.Format("{0},{1}\n", generation, bestrecord);
-            File.AppendAllText(@"BestRecordforPlot.txt", text);
-
-        }
-        finally
-        {
-            sw.Close();
-
-        }*/
     }
 
     public NN ImportNN(string filename)

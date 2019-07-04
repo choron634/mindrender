@@ -34,12 +34,12 @@ public class Agent : MonoBehaviour
     public virtual void AgentAction(float[] vectorAction, float[] vectorAction2) {
     }
 
-    public virtual void AgentReset(bool GenerationChangeflug) {
+    public virtual void AgentReset() {
     }
 
-    public void Reset(bool GenerationChange) {
+    public void Reset() {
         IsDone = false;
-        AgentReset(GenerationChange);
+        AgentReset();
     }
 
     public void Done() {

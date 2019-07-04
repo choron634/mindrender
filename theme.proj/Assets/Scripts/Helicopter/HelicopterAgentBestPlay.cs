@@ -108,7 +108,7 @@ public class HelicopterAgentBestPlay : Agent
         });
     }
     */
-    public override void AgentReset(bool GenerationChange) {
+    public override void AgentReset() {
         Controller.Stop();
         PositionSensor.WaypointReset();
         transform.position = StartPosition;
@@ -308,7 +308,7 @@ public class HelicopterAgentBestPlay : Agent
         {
             Controller.Stop();
             Done();
-            AgentReset(false);
+            AgentReset();
             return;
         }
     }

@@ -8,7 +8,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <ProjectGuid>{1E0E5303-E6CA-A2BE-7373-30BE3E2DBD50}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -184,8 +185,6 @@
     <Compile Include="Assets\Scripts\15Puzzle\PuzzleController.cs" />
     <Compile Include="Assets\Scripts\15Puzzle\PuzzlePanel.cs" />
     <Compile Include="Assets\Scripts\AI\Agent.cs" />
-    <Compile Include="Assets\Scripts\AI\Brain.cs" />
-    <Compile Include="Assets\Scripts\AI\Environment.cs" />
     <Compile Include="Assets\Scripts\AI\NN.cs" />
     <Compile Include="Assets\Scripts\AI\Nature.cs" />
     <Compile Include="Assets\Scripts\AI\Nature_seperateNN.cs" />
@@ -193,10 +192,6 @@
     <Compile Include="Assets\Scripts\Car\CarAgent.cs" />
     <Compile Include="Assets\Scripts\GraphicsToggle.cs" />
     <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent.cs" />
-    <Compile Include="Assets\Scripts\Helicopter\HelicopterAgentBestPlay.cs" />
-    <Compile Include="Assets\Scripts\Helicopter\HelicopterAgentBestPlayInOrder.cs" />
-    <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent_RandomWayPoints.cs" />
-    <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent_seperate.cs" />
     <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent_seperate2.cs" />
     <Compile Include="Assets\Scripts\Helicopter\SimpleHelicopterController.cs" />
     <Compile Include="Assets\Scripts\Helicopter\WaypointSensor.cs" />
