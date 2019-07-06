@@ -331,13 +331,13 @@ public class HelicopterAgent_seperate2 : Agent
         */
         float velocityangle = PositionSensor.GetVelocityAngles()[0];
         float perpendiculardistance = GetPerpendicularDistance();
-        var w = 1-Mathf.Pow(Mathf.Min(perpendiculardistance/100 ,1),3);
+        var w = 1-Mathf.Pow(Mathf.Min(perpendiculardistance/80 ,1),3);
         var deltay = 1-Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[0].y)/100),1),3);
         var d = 5*(1-Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[0]/Distance,1), 3));
         
         var angle =1- (Math.Abs(velocityangle));
 
-        AddReward(d);//ウェイポイントまでの距離が近いほうが良い
+        AddReward(d + w + deltay);//ウェイポイントまでの距離が近いほうが良い
 
         if (StatusText != null)
         {
@@ -361,7 +361,7 @@ public class HelicopterAgent_seperate2 : Agent
             //return;
         }
        
-        if (DriveTime > 360)
+        if (DriveTime > 500)
         {
             Controller.Stop();
             Done();
