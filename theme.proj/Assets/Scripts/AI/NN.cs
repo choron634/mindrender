@@ -7,7 +7,7 @@ using System;
 
 public class NN
 {
-    private float MutationRate { get; set; } = 0.10f;
+    private float MutationRate { get; set; } = 0.20f;
     private float RandomMin { get; set; } = -1;
     private float RandomMax { get; set; } = 1;
 
@@ -47,7 +47,7 @@ public class NN
         var dna1 = c1.ToDNA();
         var dna2 = c2.ToDNA();
 
-        var cutpoints = c1.Cut(2, dna1.Length);//適当な二つの順位を選んでる
+        var cutpoints = c1.Cut(2, dna1.Length);
 
         var ndna1 = new float[dna1.Length];
         var ndna2 = new float[dna2.Length];

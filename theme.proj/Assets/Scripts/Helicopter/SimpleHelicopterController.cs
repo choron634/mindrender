@@ -117,7 +117,7 @@ public class SimpleHelicopterController : MonoBehaviour
 
         //TorqueForce = 2 * torque * (turnForcePercent - hMove.y) * HelicopterModel.mass;
 
-        TorqueForce = 2* torque *HelicopterModel.mass;
+        TorqueForce = 10* torque *HelicopterModel.mass;
 
         hMove.x += tempX;
         hMove.y += tempY;
@@ -210,6 +210,7 @@ public class SimpleHelicopterController : MonoBehaviour
         EngineForce = 0;
         HelicopterModel.velocity = Vector3.zero;
         HelicopterModel.angularVelocity = Vector3.zero;
+        HelicopterModel.isKinematic = true;
     }
 
     private void OnCollisionEnter() {

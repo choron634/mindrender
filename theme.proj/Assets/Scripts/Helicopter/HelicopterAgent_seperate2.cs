@@ -81,6 +81,8 @@ public class HelicopterAgent_seperate2 : Agent
 
         GoalCounter = 0;
         CollisionCount = 0;
+        HeliRb.isKinematic = false;
+
 
     }
 
@@ -110,6 +112,7 @@ public class HelicopterAgent_seperate2 : Agent
         UnityEngine.Random.InitState(Seed);
 
         Controller.Stop();
+        HeliRb.ResetInertiaTensor();
         Controller.EngineForce = Controller.InitEngineForce;
         PositionSensor.WaypointReset();
         transform.position = StartPosition;
@@ -126,6 +129,7 @@ public class HelicopterAgent_seperate2 : Agent
         GoalCounter = 0;
 
         CollisionCount = 0;
+        HeliRb.isKinematic = false;
     }
 
     public bool ReachWaypoint()
@@ -229,7 +233,7 @@ public class HelicopterAgent_seperate2 : Agent
             //var timebonus = 5*Mathf.Pow(12 * (GoalCounter + 1) - DriveTime,2);
             //AddReward(timebonus);
             GoalCounter++;
-            AddReward(500);
+            AddReward(1000);
 
         }
 
@@ -251,7 +255,7 @@ public class HelicopterAgent_seperate2 : Agent
 
         //Debug.Log(DriveTime);
 
-        
+        /*
         if (CurrentPosition.y > 160.0f)//高く上がりすぎるものにペナルティ
         {
             //Debug.Log("too heigh");
@@ -259,7 +263,7 @@ public class HelicopterAgent_seperate2 : Agent
             Done();
             return;
         }
-
+        */
 
         /*     if (DriveTime >= 5.0f)//時間がたっても報酬が増えないものを消す
              {
@@ -283,11 +287,12 @@ public class HelicopterAgent_seperate2 : Agent
              }
          }
          */
-        if(PositionSensor.GetDistance()[0] > 100)//離れすぎるものにペナルティ
+        if(PositionSensor.GetDistance()[0] > Distance*2.5)//離れすぎるもを強制終了
         {
-            AddReward(-1.0f);
+            Controller.Stop();
+            Done();
+            return;
         }
-
         /*
         if (Controller.Torque > 0.8)
         {

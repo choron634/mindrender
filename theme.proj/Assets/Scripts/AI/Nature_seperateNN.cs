@@ -158,6 +158,69 @@ public class Nature_seperateNN : MonoBehaviour
             if (CurrentPopCount == TotalPopulation) {
                 SaveBestRecord(Generation, BestReward);
 
+                //ルーレット選択
+                var sum = 0.0f;
+                var roullet_temp = new float[Children.Count];
+
+                Children.Sort((a, b) => (int)b.Reward - (int)a.Reward);
+
+                for (int i = 0; i < Children.Count; i++)
+                {
+                    sum += Mathf.Pow(Children[i].Reward,3);
+                }
+                for (int i = 0; i < Children.Count; i++)
+                {
+                    roullet_temp[i] = Mathf.Pow(Children[i].Reward,3) / sum;
+                }
+
+                List<NN> NewChildren = new List<NN>();
+
+                /*
+                for (int i = 0; i < EliteNumber; i++)//エリート保存
+                {
+                    NewChildren.Add(Children[i]);
+                }
+                */
+
+                //NewChildren.Add(Children[0]);
+                for (int i = 0; i < 200; i++)//エリートの子孫
+                {
+                    var (c1, c2) = Children[0].Crossover(Children[1]);
+                    NewChildren.Add(c1);
+                    NewChildren.Add(c2);
+                }
+
+                while (NewChildren.Count < TotalPopulation)
+                {
+                    var parents = new NN[2];
+                    for (int i = 0; i < 2; i++)
+                    {
+                        UnityEngine.Random.InitState(System.DateTime.Now.Millisecond);
+                        float rdm = UnityEngine.Random.Range(0.0f, 1.0f);
+                        float sum_score = 0.0f;
+                        for (int j = 0; j < Children.Count; j++)
+                        {
+                            sum_score += roullet_temp[j];
+                            if (sum_score > rdm)
+                            {
+                                parents[i] = Children[j];
+                                break;
+                            }
+                        }
+                    }
+                    var (c1, c2) = parents[0].Crossover(parents[1]);
+                    NewChildren.Add(c1);
+                    NewChildren.Add(c2);
+                }
+
+                Children.Clear();
+                Children = new List<NN>(NewChildren);
+                Generation++;
+                CurrentPopCount = 0;
+                BestReward = 0;
+                SecondReward = 0;
+
+                /*
                 ///トーナメント選択
                 var TournamentMembers = Children.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(tournamentSelection).ToList();
                 var YawTournamentMembers = ChildrenYaw.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(ChildrenYaw.Count).ToList();
@@ -179,21 +242,40 @@ public class Nature_seperateNN : MonoBehaviour
                 BestReward = 0;
                 SecondReward = 0;
                 Children.Clear();
-                //ChildrenYaw.Clear();//if you want to update the yaw NN, remove this coment out.
+                //ChildrenYaw.Clear();
 
-                //Debug.Log(BestBrain);
+                //Children.Sort((a, b) => (int)b.Reward - (int)a.Reward);
+                //ChildrenYaw.Sort((a, b) => (int)b.Reward - (int)a.Reward); //if you want to update the yaw NN, remove this coment out.
+
+                //var temp3 = new NN[Children.Count];
+                //Children.CopyTo(temp3);
+                //var temp4 = new NN[Children.Count];
+                //ChildrenYaw.Copyto(temp4); //if you want to update the yaw NN, remove this coment out.
+
+                //Children.Clear();
+                //ChildrenYaw.Clear();//if you want to update the yaw NN, remove this coment out.
+                */
+                /*
+                for (int i = 0; i < EliteNumber; i++)//エリート保存
+                {
+                    Children.Add(temp3[i]);
+                    //ChildrenYaw.Add(temp4[i]);//if you want to update the yaw NN, remove this coment out.
+                }
+                */
+                /*
                 for (int i = 0; i < EliteNumber; i++)//エリート保存
                 {
                     Children.Add(TournamentMembers[i]);
                     //ChildrenYaw.Add(YawTournamentMembers[i]);//if you want to update the yaw NN, remove this coment out.
                 }
 
+
                 while (Children.Count < TotalPopulation) {
                     var (c1, c2) = BestBrainInTournament.Crossover(SecondBrainInTournament);//トーナメント上位2個体の交叉結果の子供
                     Children.Add(c1);
                     Children.Add(c2);
                 }
-
+                */
                 /*
                 while (ChildrenYaw.Count < TotalPopulation) //if you want to update the yaw NN, remove this coment out.
                 {
