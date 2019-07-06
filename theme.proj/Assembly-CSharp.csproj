@@ -190,6 +190,7 @@
     <Compile Include="Assets\Scripts\AI\Nature.cs" />
     <Compile Include="Assets\Scripts\AI\Nature_YawLearningNN.cs" />
     <Compile Include="Assets\Scripts\AI\Nature_seperateNN.cs" />
+    <Compile Include="Assets\Scripts\AI\Nature_seperateNN_with_buildings.cs" />
     <Compile Include="Assets\Scripts\AI\PlayBest.cs" />
     <Compile Include="Assets\Scripts\Car\CarAgent.cs" />
     <Compile Include="Assets\Scripts\GraphicsToggle.cs" />
@@ -201,6 +202,7 @@
     <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent_YawLearning_Play.cs" />
     <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent_seperate.cs" />
     <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent_seperate2.cs" />
+    <Compile Include="Assets\Scripts\Helicopter\HelicopterAgent_seperate2_with_buildings.cs" />
     <Compile Include="Assets\Scripts\Helicopter\SimpleHelicopterController.cs" />
     <Compile Include="Assets\Scripts\Helicopter\WaypointSensor.cs" />
     <Compile Include="Assets\Scripts\Matrix.cs" />

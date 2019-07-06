@@ -178,9 +178,9 @@ public class NN
 
         InputBias = new Matrix(1, hiddenSize1);
         InputWeights = new Matrix(inputSize, hiddenSize1);
-        HiddenBias1 = new Matrix(1, HiddenSize1);
+        HiddenBias1 = new Matrix(1, HiddenSize2);
         HiddenWeights1 = new Matrix(HiddenSize1, HiddenSize2);
-        HiddenBias2 = new Matrix(1, hiddenSize2);
+        HiddenBias2 = new Matrix(1, outputSize);
         HiddenWeights2 = new Matrix(hiddenSize2, outputSize);
     }
 

@@ -24,6 +24,11 @@ public class Agent : MonoBehaviour
         return new List<float>();
     }
 
+    public virtual List<float> CollectSensorObservations()
+    {
+        return new List<float>();
+    }
+
     public virtual List<float> CollectObservations() {
         return new List<float>();
     }
