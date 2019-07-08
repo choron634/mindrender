@@ -60,8 +60,8 @@ public class Nature_seperateNN : MonoBehaviour
     private List<NN> ChildrenYaw { get; set; } = new List<NN>();
 
 
-    [SerializeField] private int tournamentSelection = 85;
-    private int TournamentSlection { get { return tournamentSelection; } }
+ //   [SerializeField] private int tournamentSelection = 85;
+   // private int TournamentSlection { get { return tournamentSelection; } }
 
 
     public Text Populationtext;
