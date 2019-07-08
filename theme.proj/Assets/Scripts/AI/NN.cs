@@ -178,8 +178,8 @@ public class NN
 
         InputBias = new Matrix(1, hiddenSize1);
         InputWeights = new Matrix(inputSize, hiddenSize1);
-        HiddenBias1 = new Matrix(1, HiddenSize2);
-        HiddenWeights1 = new Matrix(HiddenSize1, HiddenSize2);
+        HiddenBias1 = new Matrix(1, hiddenSize2);
+        HiddenWeights1 = new Matrix(hiddenSize1, hiddenSize2);
         HiddenBias2 = new Matrix(1, outputSize);
         HiddenWeights2 = new Matrix(hiddenSize2, outputSize);
     }
@@ -221,8 +221,13 @@ public class NN
         var set = new SortedSet<int>();
 
         set.Add(0);
-        while(set.Count < n + 1) {
-            set.Add(UnityEngine.Random.Range(1, length));
+        //var seed = System.DateTime.Now.Millisecond;
+        while (set.Count < n + 1) {
+            //seed += 1;
+            //UnityEngine.Random.InitState(seed);
+            var temp = UnityEngine.Random.Range(1, length);
+            set.Add(temp);
+            //Debug.Log("temp" + temp);
         }
         set.Add(length);
         /*

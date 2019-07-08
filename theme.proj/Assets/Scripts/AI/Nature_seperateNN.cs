@@ -166,11 +166,11 @@ public class Nature_seperateNN : MonoBehaviour
 
                 for (int i = 0; i < Children.Count; i++)
                 {
-                    sum += Mathf.Pow(Children[i].Reward,3);
+                    sum += Children[i].Reward;
                 }
                 for (int i = 0; i < Children.Count; i++)
                 {
-                    roullet_temp[i] = Mathf.Pow(Children[i].Reward,3) / sum;
+                    roullet_temp[i] = Children[i].Reward / sum;
                 }
 
                 List<NN> NewChildren = new List<NN>();
@@ -182,21 +182,24 @@ public class Nature_seperateNN : MonoBehaviour
                 }
                 */
 
-                //NewChildren.Add(Children[0]);
-                for (int i = 0; i < 200; i++)//エリートの子孫
+                NewChildren.Add(Children[0]);
+                for (int i = 0; i < 150; i++)//エリートの子孫
                 {
                     var (c1, c2) = Children[0].Crossover(Children[1]);
                     NewChildren.Add(c1);
                     NewChildren.Add(c2);
                 }
+               // Debug.Log("hey");
+               // Debug.Log(NewChildren.Count);
 
                 while (NewChildren.Count < TotalPopulation)
                 {
                     var parents = new NN[2];
                     for (int i = 0; i < 2; i++)
                     {
-                        UnityEngine.Random.InitState(System.DateTime.Now.Millisecond);
+                        //UnityEngine.Random.InitState(System.DateTime.Now.Millisecond);
                         float rdm = UnityEngine.Random.Range(0.0f, 1.0f);
+                        //Debug.Log("rdm" + rdm);
                         float sum_score = 0.0f;
                         for (int j = 0; j < Children.Count; j++)
                         {
@@ -219,7 +222,7 @@ public class Nature_seperateNN : MonoBehaviour
                 CurrentPopCount = 0;
                 BestReward = 0;
                 SecondReward = 0;
-
+                NewChildren.Clear();
                 /*
                 ///トーナメント選択
                 var TournamentMembers = Children.AsEnumerable().OrderBy(x => Guid.NewGuid()).Take(tournamentSelection).ToList();

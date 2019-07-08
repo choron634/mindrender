@@ -31,15 +31,23 @@ public class HelicopterAgentBestPlay : Agent
     private Rigidbody HeliRb { get; set; }
     private RayPerception RayPer { get; set; }
 
-    private int CurrentGoal { get; set; }
-    private int ExGoal { get; set; }
+    private Vector3 CurrentGoal { get; set; }
+    private Vector3 ExGoal { get; set; }
     private int GoalCounter { get; set; }
     private int[] Points;
     private int PointNumber { get; set; }
     private float Distance_to_next_waypoint { get; set; }
     private float MaxDistance { get; set; }
+    private float Distance { get; set; }
+
+    private NN BestMainBrain;
+    private NN BestYawBrain;
+
+    private Vector3 StartWayPointPosition { get; set; }
+
 
     private int CollisionCount { get; set; }
+    private int Seed = 1;
 
 
     [SerializeField] private Text statusText = null;
@@ -56,6 +64,7 @@ public class HelicopterAgentBestPlay : Agent
     /// 開始時に呼び出される初期化処理
     /// </summary>
     private void Start() {
+        UnityEngine.Random.InitState(Seed);
         // 車の制御コントローラーを取得
         Controller = GetComponent<SimpleHelicopterController>();
 
@@ -71,20 +80,19 @@ public class HelicopterAgentBestPlay : Agent
         StartPosition = transform.position;
         StartRotation = transform.rotation;
         LastPosition = StartPosition;
+        StartWayPointPosition = PositionSensor.points[0].transform.position;
+        CurrentGoal = StartWayPointPosition;
+        Distance = Vector3.Distance(StartPosition, CurrentGoal);
 
-        PointNumber = PositionSensor.Points.Length;
-
-        Points = Enumerable.Range(0, PointNumber).ToArray();
-        Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
-
-        CurrentGoal = Points[0];
         GoalCounter = 0;
-
-        Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
-        //MaxDistance = PositionSensor.GetDistance()[PointNumber-1];
         CollisionCount = 0;
-        
-        
+        HeliRb.isKinematic = false;
+
+        BestMainBrain = new NN(0, 0, 0, 0);
+        BestYawBrain = new NN(0, 0, 0, 0);
+
+        BestMainBrain = MakeNN(BestMainBrain, MainBrainFileName);
+        BestYawBrain = MakeNN(BestYawBrain, YawBrainFileName);
     }
 
     /// <summary>
@@ -109,34 +117,34 @@ public class HelicopterAgentBestPlay : Agent
     }
     */
     public override void AgentReset() {
+        Seed = Seed + 1;
+        UnityEngine.Random.InitState(Seed);
+
         Controller.Stop();
+        HeliRb.ResetInertiaTensor();
+        Controller.EngineForce = Controller.InitEngineForce;
         PositionSensor.WaypointReset();
         transform.position = StartPosition;
         transform.rotation = StartRotation;
         LastPosition = StartPosition;
         DriveTime = 0;
         KillTime = 0;
-        StopTime = 0;
+        //StopTime = 0;
+        //RotatingTime = 0;
+        //NegativeRotatingTime = 0;
         SetReward(0);
-
-        
-        Points = Points.OrderBy(i => Guid.NewGuid()).ToArray();
-
-        CurrentGoal = Points[0];
+        PositionSensor.points[0].transform.position = StartWayPointPosition;
+        CurrentGoal = StartWayPointPosition;
         GoalCounter = 0;
-        Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
-        for (int i = 0; i < PointNumber; i++)
-        {
-            sphere = GameObject.Find("Sphere" + i);
-            sphere.GetComponent<Renderer>().material.color = Color.green;
-        }
+
         CollisionCount = 0;
+        HeliRb.isKinematic = false;
     }
 
     public bool ReachWaypoint()
     {
         var distance = PositionSensor.GetDistance();
-        if (distance[CurrentGoal] < 15.0f)
+        if (distance[0] < 18.0f)
         {
             return true;
         }
@@ -153,7 +161,10 @@ public class HelicopterAgentBestPlay : Agent
         yawobservations.Add(HeliRb.angularVelocity.y);
 
         // ウェイポイントまでの水平角度を取得
-        yawobservations.Add(PositionSensor.GetHorizontalAngles()[CurrentGoal]);
+        yawobservations.Add(PositionSensor.GetHorizontalAngles()[0]);
+
+        //yawobservations.Add(velocityangle);
+
 
         return yawobservations;
     }
@@ -163,6 +174,8 @@ public class HelicopterAgentBestPlay : Agent
         var observations = new List<float>();
 
         var v = HeliRb.velocity;
+        float velocityangle = PositionSensor.GetVelocityAngles()[0];
+
 
         //Debug.Log("velocity" + v);
 
@@ -188,25 +201,27 @@ public class HelicopterAgentBestPlay : Agent
         // ウェイポイントまでの直線距離,ベクトルを取得
         //observations.Add(PositionSensor.GetDistance()[CurrentGoal]);
 
-        observations.Add(PositionSensor.GetVector()[CurrentGoal].x);
+        observations.Add(PositionSensor.GetVector()[0].x);
 
-        observations.Add(PositionSensor.GetVector()[CurrentGoal].y);
+        observations.Add(PositionSensor.GetVector()[0].y);
 
-        observations.Add(PositionSensor.GetVector()[CurrentGoal].z);
+        observations.Add(PositionSensor.GetVector()[0].z);
+
+        observations.Add(velocityangle);
 
         //各軸周りの回転角
-       // observations.Add(HeliRb.transform.eulerAngles.x);
+        // observations.Add(HeliRb.transform.eulerAngles.x);
 
         //observations.Add(HeliRb.transform.eulerAngles.y);
 
         //observations.Add(HeliRb.transform.eulerAngles.z);
-        
+
         //各軸周りの角速度
-        observations.Add(HeliRb.angularVelocity.x);
+        //observations.Add(HeliRb.angularVelocity.x);
 
         //observations.Add(HeliRb.angularVelocity.y);
 
-        observations.Add(HeliRb.angularVelocity.z);
+        //observations.Add(HeliRb.angularVelocity.z);
 
 
         // ウェイポイントまでの水平角度を取得
@@ -217,102 +232,142 @@ public class HelicopterAgentBestPlay : Agent
 
     private void FixedUpdate()
     {
+        //Debug.Log(Time.fixedDeltaTime);
+        //PositionSensor.WaypointReset();
+
         DriveTime += Time.fixedDeltaTime;
         //Controller.IsOnGround = false;
 
         var mainobsevation = CollectObservations();
         var yawobservation = CollectYawObservations();
 
-        var bestmainbrain = new NN(0, 0, 0, 0);
-        var bestyawbrain = new NN(0, 0, 0, 0);
 
-        bestmainbrain = MakeNN(bestmainbrain, MainBrainFileName);
-        bestyawbrain = MakeNN(bestyawbrain, YawBrainFileName);
 
-        var mainactions = bestmainbrain.Predict(mainobsevation.ToArray());
-        var yawactions = bestyawbrain.Predict(yawobservation.ToArray());
+        var mainactions = BestMainBrain.Predict(mainobsevation.ToArray());
+        var yawactions = BestYawBrain.Predict(yawobservation.ToArray());
 
         Controller.Move(Mathf.Clamp(mainactions[0], -1, 1), Mathf.Clamp(mainactions[1], -1, 1), Mathf.Clamp(mainactions[2], -1, 1), Mathf.Clamp(yawactions[0], -1, 1));
 
-        if (ReachWaypoint())
+        if (ReachWaypoint())//ウェイポイントに到達したときの処理
         {
             ExGoal = CurrentGoal;
-            CurrentGoal = Points[GoalCounter + 1];
+            var temp = CurrentGoal + UnityEngine.Random.onUnitSphere * Distance;
+            while(temp.y < 50)
+            {
+                temp = CurrentGoal + UnityEngine.Random.onUnitSphere * Distance;
+            }
+            CurrentGoal = temp;
+            PositionSensor.points[0].transform.position = CurrentGoal;
+            //var timebonus = 5*Mathf.Pow(12 * (GoalCounter + 1) - DriveTime,2);
+            //AddReward(timebonus);
             GoalCounter++;
-            Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
-            Controller.EngineForce = Controller.InitEngineForce;
-            transform.rotation = StartRotation;
-        }
-
-        if (CurrentGoal < PointNumber - 1)
-        {
-            sphere = GameObject.Find("Sphere" + CurrentGoal);
-            sphere.GetComponent<Renderer>().material.color = Color.red;
+            AddReward(1000);
 
         }
 
-        Vector3 CurrentPosition = HeliRb.transform.position;
-        float Velocity = HeliRb.velocity.magnitude;
-        float waypointdistance = PositionSensor.GetDistance()[CurrentGoal];
-        int waypointobject = PositionSensor.GetObjects()[CurrentGoal];
-        float horizontalangle = PositionSensor.GetHorizontalAngles()[CurrentGoal];
-        float normalizeddistance = Mathf.Clamp(((Distance_to_next_waypoint - PositionSensor.GetDistance()[CurrentGoal]) / Distance_to_next_waypoint), 0, 1);
-        
+        float velocityangle = PositionSensor.GetVelocityAngles()[0];
+        //float perpendiculardistance = GetPerpendicularDistance();
+        //var w = 1 - Mathf.Pow(Mathf.Min(perpendiculardistance / 80, 1), 3);
+        var deltay = 1 - Mathf.Pow(Mathf.Min((Math.Abs(PositionSensor.GetVector()[0].y) / 100), 1), 3);
+        var d = 5 * (1 - Mathf.Pow(Mathf.Min(PositionSensor.GetDistance()[0] / Distance, 1), 3));
+
+        var angle = 1 - (Math.Abs(velocityangle));
+
+        AddReward(d + deltay);//ウェイポイントまでの距離が近いほうが良い
+
         if (StatusText != null)
         {
-            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime;
+            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime + "\nGoalCounter : " + GoalCounter + "\nDistrance : " + PositionSensor.GetDistance()[0];
         }
 
-        if (CurrentPosition.y > 160.0f)//高く上がりすぎるものにペナルティ
+
+        if (DriveTime > 13 * (GoalCounter + 1))//段階的に時間を延ばす
         {
-            //Debug.Log("too heigh");
-            AddReward(-0.05f);
-        }
-        
-        if (Velocity < 5.0f)//動かないものにペナルティ
-        {
-            StopTime += Time.fixedDeltaTime;
-            if (StopTime > 4)
-            {
-                //Debug.Log("Don't move");
-                AddReward(-0.05f);
-            }
-        }
-
-        if (transform.position.y <= 3.0f)//地面に接触し続けるものを消す
-        {
-            AddReward(-0.05f);
+            //AddReward(Mathf.Clamp((MaxDistance - PositionSensor.GetDistance()[PointNumber - 1]), 0, MaxDistance) * 10);
+            // Debug.Log("Done!");
+            Controller.Stop();
+            //if(TrialCount == PointsPerTrial)
+            //{
+            //Reward = Reward / PointsPerTrial;//平均で考える。
+            Done();
+            return;
+            //}
+            //TrialCount++;
+            //Restart();
+            //return;
         }
 
-        if (Controller.IsOnGround)
-        {
-            AddReward(-0.05f);
-        }
-
-        if (Controller.EngineForce < 0.1)
-        {
-            AddReward(-0.05f);
-        }
-
-
-        float perpendiculardistance = GetPerpendicularDistance();
-        var w = Mathf.Pow(1 - Mathf.Min(perpendiculardistance / 100, 1), 3);
-        var deltaz = Mathf.Pow(1 - Mathf.Min((Math.Abs(PositionSensor.GetVector()[CurrentGoal].z) / 100), 1), 3);
-        var d = 3 * Mathf.Pow(1 - Mathf.Min(PositionSensor.GetDistance()[CurrentGoal] / Distance_to_next_waypoint, 1), 3);
-        var angle = Mathf.Pow((1 - Math.Abs(horizontalangle)), 2);
-
-        AddReward(Mathf.Max((deltaz * d * angle), 0));
-
-
-        if (DriveTime > 50)
+        if (DriveTime > 500)
         {
             Controller.Stop();
             Done();
-            AgentReset();
             return;
         }
+
+        /*if (DriveTime >= 10.0f)//時間がたっても報酬が増えないものを消す
+        {
+            if (Reward < 10)
+            {
+                Controller.Stop();
+                Done();
+                return;
+            }
+        }
+        */
+
+        /*
+        if ((x*x + y*y + z*z) < 1.0F)
+        {
+            Controller.Stop();
+            Done();
+            return;
+        }
+
+        if ((int)PrevReward == (int)Reward)
+        {//報酬が増えないフレームが一定数以上になるものを消す
+            KillTime += Time.fixedDeltaTime;
+            if (KillTime >= 10.0f)
+            {
+                Controller.Stop();
+                Done();
+                return;
+            }
+        }
+        else
+        {
+            KillTime = 0;
+        }
+
+        PrevReward = Reward;
+        LastPosition = transform.position;
+
+        */
     }
-    
+
+    /// <summary>
+    /// 衝突時に呼び出されるコールバック
+    /// </summary>
+    /// <param name="collision"></param>
+    public void OnCollisionEnter(Collision collision)
+    {
+
+        // 例えばtagがwallだったらの判定
+        if (collision.gameObject.tag == "wall")
+        {
+            /* if(DriveTime < 10.0f)
+             {
+                 // 停止
+                 Controller.Stop();
+                 Done();
+             }
+             else
+             {*/
+            CollisionCount += 1;
+            AddReward(-5);
+            //}
+        }
+    }
+
     public NN MakeNN(NN bestbrain, string filename)
     {
         FileStream fs = new FileStream(filename, FileMode.Open);
@@ -359,7 +414,6 @@ public class HelicopterAgentBestPlay : Agent
 
                 }
             }
-
             for (int c = 0; c < hiddenbias2.Colmun; c++)
             {
                 hiddenbias2[0, c] = float.Parse(sr.ReadLine());
@@ -373,7 +427,6 @@ public class HelicopterAgentBestPlay : Agent
 
                 }
             }
-
         }
         finally
         {
@@ -381,29 +434,6 @@ public class HelicopterAgentBestPlay : Agent
         }
         return bestbrain;
 
-    }
-
-    /// <summary>
-    /// 衝突時に呼び出されるコールバック
-    /// </summary>
-    /// <param name="collision"></param>
-    public void OnCollisionEnter(Collision collision) {
-
-        // 例えばtagがwallだったらの判定
-        if (collision.gameObject.tag == "wall") {
-            /* if(DriveTime < 10.0f)
-             {
-                 // 停止
-                 Controller.Stop();
-                 Done();
-             }
-             else
-             {*/
-            CollisionCount += 1;
-            AddReward(-10);
-
-            //}
-        }
     }
 
 
@@ -422,7 +452,7 @@ public class HelicopterAgentBestPlay : Agent
         
         return a + Vector3.Project(p- a, b - a);
     }
-
+    /*
     private float GetPerpendicularDistance()//最短経路に下ろした垂線の長さを取得する
     {
         Vector3 a = new Vector3(0.0f, 0.0f, 0.0f);
@@ -440,5 +470,6 @@ public class HelicopterAgentBestPlay : Agent
         float distance = Vector3.Distance(CurrentPosition, h);
         return distance;
     }
+    */
 }
 

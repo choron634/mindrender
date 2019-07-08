@@ -164,7 +164,7 @@ public class Nature_seperateNN_with_buildings : MonoBehaviour
                 }
                 */
 
-                //NewChildrenFusion.Add(ChildrenFusion[0]);
+                NewChildrenFusion.Add(ChildrenFusion[0]);
                 for (int i = 0; i < 200; i++)//エリートの子孫
                 {
                     var (c1, c2) = ChildrenFusion[0].Crossover(ChildrenFusion[1]);

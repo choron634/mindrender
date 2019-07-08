@@ -136,7 +136,7 @@ public class HelicopterAgentBestPlayInOrder : Agent
     public bool ReachWaypoint()
     {
         var distance = PositionSensor.GetDistance();
-        if (distance[CurrentGoal] < 25.0f)
+        if (distance[CurrentGoal] < 18.0f)
         {
             return true;
         }
@@ -194,15 +194,17 @@ public class HelicopterAgentBestPlayInOrder : Agent
         observations.Add(PositionSensor.GetVector()[CurrentGoal].y);
 
         observations.Add(PositionSensor.GetVector()[CurrentGoal].z);
+
         observations.Add(velocityangle);
-        
+
+
         //各軸周りの回転角
-       // observations.Add(HeliRb.transform.eulerAngles.x);
+        // observations.Add(HeliRb.transform.eulerAngles.x);
 
         //observations.Add(HeliRb.transform.eulerAngles.y);
 
         //observations.Add(HeliRb.transform.eulerAngles.z);
-        
+
         //各軸周りの角速度
         //observations.Add(HeliRb.angularVelocity.x);
 
@@ -250,8 +252,10 @@ public class HelicopterAgentBestPlayInOrder : Agent
                 CurrentGoal = Points[GoalCounter + 1];
                 GoalCounter++;
                 Distance_to_next_waypoint = PositionSensor.GetDistance()[CurrentGoal];
-                Controller.EngineForce = Controller.InitEngineForce;
-                transform.rotation = StartRotation;
+                for (int i = 0; i < PointNumber; i++)
+                {
+                    PositionSensor.WaypointReset();
+                }
             }
 
         }
@@ -272,38 +276,7 @@ public class HelicopterAgentBestPlayInOrder : Agent
         
         if (StatusText != null)
         {
-            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTail : " + Controller.Torque + "\nReward : " + Reward + "\nTime : " + DriveTime + "\nCurrentGoal : " + CurrentGoal + "\nGoalCounter : " + GoalCounter; 
-        }
-
-        if (CurrentPosition.y > 160.0f)//高く上がりすぎるものにペナルティ
-        {
-            //Debug.Log("too heigh");
-            AddReward(-0.05f);
-        }
-        
-        if (Velocity < 5.0f)//動かないものにペナルティ
-        {
-            StopTime += Time.fixedDeltaTime;
-            if (StopTime > 4)
-            {
-                //Debug.Log("Don't move");
-                AddReward(-0.05f);
-            }
-        }
-
-        if (transform.position.y <= 3.0f)//地面に接触し続けるものを消す
-        {
-            AddReward(-0.05f);
-        }
-
-        if (Controller.IsOnGround)
-        {
-            AddReward(-0.05f);
-        }
-
-        if (Controller.EngineForce < 0.1)
-        {
-            AddReward(-0.05f);
+            StatusText.text = "EngineForce : " + Controller.EngineForce + "\nTail : " + Controller.Torque  + "\nTime : " + DriveTime + "\nCurrentGoal : " + CurrentGoal + "\nGoalCounter : " + GoalCounter; 
         }
 
 

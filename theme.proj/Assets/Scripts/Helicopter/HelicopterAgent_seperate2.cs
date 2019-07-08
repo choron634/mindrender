@@ -135,7 +135,7 @@ public class HelicopterAgent_seperate2 : Agent
     public bool ReachWaypoint()
     {
         var distance = PositionSensor.GetDistance();
-        if (distance[0] < 15.0f)
+        if (distance[0] < 18.0f)
         {
             return true;
         }
@@ -337,7 +337,7 @@ public class HelicopterAgent_seperate2 : Agent
         
         var angle =1- (Math.Abs(velocityangle));
 
-        AddReward(d + w + deltay);//ウェイポイントまでの距離が近いほうが良い
+        AddReward(d+deltay);//ウェイポイントまでの距離が近いほうが良い
 
         if (StatusText != null)
         {
@@ -345,7 +345,7 @@ public class HelicopterAgent_seperate2 : Agent
         }
 
 
-        if (DriveTime > 10*(GoalCounter+1))//段階的に時間を延ばす
+        if (DriveTime > 13*(GoalCounter+1))//段階的に時間を延ばす
         {
             //AddReward(Mathf.Clamp((MaxDistance - PositionSensor.GetDistance()[PointNumber - 1]), 0, MaxDistance) * 10);
            // Debug.Log("Done!");

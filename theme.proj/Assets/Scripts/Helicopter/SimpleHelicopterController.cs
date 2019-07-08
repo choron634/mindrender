@@ -90,7 +90,7 @@ public class SimpleHelicopterController : MonoBehaviour
     public void Move(float x, float y, float deltaengineforce, float torque) {//Use this.
         Torque = torque;
 
-        EngineForce += 100*deltaengineforce;
+        EngineForce += 80*deltaengineforce;
         //Tail = tail;
 
         float tempY = 0;
@@ -117,7 +117,7 @@ public class SimpleHelicopterController : MonoBehaviour
 
         //TorqueForce = 2 * torque * (turnForcePercent - hMove.y) * HelicopterModel.mass;
 
-        TorqueForce = 10* torque *HelicopterModel.mass;
+        TorqueForce = 20* torque *HelicopterModel.mass;
 
         hMove.x += tempX;
         hMove.y += tempY;
