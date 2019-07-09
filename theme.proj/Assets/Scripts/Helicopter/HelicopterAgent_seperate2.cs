@@ -337,7 +337,7 @@ public class HelicopterAgent_seperate2 : Agent
         
         var angle =1- (Math.Abs(velocityangle));
 
-        AddReward(d+deltay);//ウェイポイントまでの距離が近いほうが良い
+        AddReward(d+deltay+w);//ウェイポイントまでの距離が近いほうが良い
 
         if (StatusText != null)
         {
